@@ -1,0 +1,4 @@
+﻿function test() {
+}
+
+test()
