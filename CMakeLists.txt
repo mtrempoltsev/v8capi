@@ -10,11 +10,11 @@ add_definitions (
     )
 
 set (HEADERS
-    v8capi.h
+    include/v8capi.h
     )
 
 set (SOURCES
-    v8capi.cpp
+    src/v8capi.cpp
     )
 
 include_directories (

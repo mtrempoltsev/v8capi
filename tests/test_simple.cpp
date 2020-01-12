@@ -5,7 +5,7 @@
 #include <sstream>
 #include <thread>
 
-#include "../v8capi.h"
+#include "../include/v8capi.h"
 
 std::string read_file(const char* name)
 {

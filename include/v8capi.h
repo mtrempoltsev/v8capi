@@ -105,7 +105,7 @@ struct v8_value
         uint32,         // uint32_t
 
         // js object
-        object,         // v8_array* of v8_pair
+        object,         // not implemented
         array,          // v8_array* of v8_value
         map,            // v8_array* of v8_pair
         set,            // v8_array* of v8_value
@@ -117,6 +117,16 @@ struct v8_value
     type_specifiers specifier;
     void* value;
 };
+
+struct v8_value v8_make_boolean(bool value);
+struct v8_value v8_make_null();
+struct v8_value v8_make_undefined();
+struct v8_value v8_make_number(double value);
+struct v8_value v8_make_integer(int64_t value);
+struct v8_value v8_make_string(const char* value, int64_t length);
+struct v8_value v8_make_array(int64_t size);
+struct v8_value v8_make_set(int64_t size);
+struct v8_value v8_make_map(int64_t size);
 
 void v8_delete_value(
     struct v8_value* value);

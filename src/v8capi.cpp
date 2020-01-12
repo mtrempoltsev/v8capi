@@ -5,7 +5,7 @@
 #include <libplatform/libplatform.h>
 #include <v8.h>
 
-#include "v8capi.h"
+#include "../include/v8capi.h"
 
 struct v8_instance
 {
