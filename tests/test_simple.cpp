@@ -33,83 +33,107 @@ std::string read_file(const char* name)
 
 void check_compile_errors(v8_isolate* vm)
 {
-    v8_error* err = nullptr;
+    v8_error err;
 
     v8_script* script = 
         v8_compile_script(vm, read_file("syntax_error.js").c_str(), "my.js", &err);
 
     ASSERT(script == nullptr);
 
-    ASSERT(err != nullptr);
+    ASSERT(err.line_number == 1);
+    ASSERT(err.location == std::string("my.js"));
+    ASSERT(err.message == std::string("SyntaxError: Invalid or unexpected token"));
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == std::string("﻿x = 3'\n      ^"));
 
-    ASSERT(err->line_number == 1);
-    ASSERT(err->location == std::string("my.js"));
-    ASSERT(err->message == std::string("SyntaxError: Invalid or unexpected token"));
-    ASSERT(err->stack_trace == nullptr);
-    ASSERT(err->wavy_underline == std::string("﻿x = 3'\n      ^"));
-
-    v8_delete_error(err);
+    v8_delete_error(&err);
 }
 
 void check_runtime_errors(v8_isolate* vm)
 {
-    v8_error* err = nullptr;
+    v8_error err;
 
     v8_script* script =
         v8_compile_script(vm, read_file("throw.js").c_str(), "my.js", &err);
 
     ASSERT(script != nullptr);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     bool ok = v8_run_script(script, &err);
 
     ASSERT(ok == false);
-    ASSERT(err != nullptr);
 
-    ASSERT(err->line_number == 2);
-    ASSERT(err->location == std::string("my.js"));
-    ASSERT(err->message == std::string("my_err"));
-    ASSERT(err->stack_trace == std::string("    test                 @ my.js:2\n    (anonymous function) @ my.js:5"));
-    ASSERT(err->wavy_underline == std::string("    throw 'my_err'\n    ^"));
+    ASSERT(err.line_number == 2);
+    ASSERT(err.location == std::string("my.js"));
+    ASSERT(err.message == std::string("my_err"));
+    ASSERT(err.stack_trace == std::string("    test                 @ my.js:2\n    (anonymous function) @ my.js:5"));
+    ASSERT(err.wavy_underline == std::string("    throw 'my_err'\n    ^"));
 
-    v8_delete_error(err);
+    v8_delete_error(&err);
 
     v8_delete_script(script);
 }
 
 void check_normal_execution(v8_isolate* vm)
 {
-    v8_error* err = nullptr;
+    v8_error err;
 
     v8_script* script =
         v8_compile_script(vm, read_file("good_script.js").c_str(), "my.js", &err);
 
     ASSERT(script != nullptr);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     bool ok = v8_run_script(script, &err);
 
     ASSERT(ok == true);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     v8_delete_script(script);
 }
 
 void check_script_termination(v8_isolate* vm)
 {
-    v8_error* err = nullptr;
+    v8_error err;
 
     v8_script* s1 =
         v8_compile_script(vm, read_file("infinite_loop.js").c_str(), "my.js", &err);
 
     ASSERT(s1 != nullptr);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     v8_script* s2 =
         v8_compile_script(vm, read_file("good_script.js").c_str(), "my.js", &err);
 
+    v8_run_script(s2, &err);
+
     ASSERT(s2 != nullptr);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     std::thread killer(
         [s1]()
@@ -123,22 +147,24 @@ void check_script_termination(v8_isolate* vm)
     killer.join();
 
     ASSERT(ok == false);
-    ASSERT(err != nullptr);
 
-    ASSERT(err->line_number == 0);
-    ASSERT(err->location == nullptr);
-    ASSERT(err->message == std::string("Script execution terminated"));
-    ASSERT(err->stack_trace == nullptr);
-    ASSERT(err->wavy_underline == nullptr);
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == std::string("Script execution terminated"));
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
-    v8_delete_error(err);
-
-    err = nullptr;
+    v8_delete_error(&err);
 
     ok = v8_run_script(s2, &err);
 
     ASSERT(ok == true);
-    ASSERT(err == nullptr);
+
+    ASSERT(err.line_number == 0);
+    ASSERT(err.location == nullptr);
+    ASSERT(err.message == nullptr);
+    ASSERT(err.stack_trace == nullptr);
+    ASSERT(err.wavy_underline == nullptr);
 
     v8_delete_script(s1);
     v8_delete_script(s2);

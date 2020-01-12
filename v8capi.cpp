@@ -58,6 +58,7 @@ v8_isolate* v8_new_isolate()
 
     v8::Isolate::CreateParams create_params;
     create_params.array_buffer_allocator = instance->allocator_.get();
+    create_params.only_terminate_in_safe_scope = true;
 
     instance->isolate_ = v8::Isolate::New(create_params);
 
@@ -91,11 +92,10 @@ void v8_delete_error(
     delete[] error->wavy_underline;
     delete[] error->location;
     delete[] error->stack_trace;
-
-    delete error;
 }
 
-char* duplicate_string(const char* string)
+char* duplicate_string(
+    const char* string)
 {
     const size_t length = strlen(string);
     auto result = std::make_unique<char[]>(length + 1);
@@ -103,7 +103,9 @@ char* duplicate_string(const char* string)
     return result.release();
 }
 
-char* make_string(v8::Isolate* isolate, v8::Local<v8::String> source)
+char* make_string(
+    v8::Isolate* isolate, 
+    v8::Local<v8::String> source)
 {
     if (source.IsEmpty())
     {
@@ -119,18 +121,21 @@ char* make_string(v8::Isolate* isolate, v8::Local<v8::String> source)
         : duplicate_string("<string conversion failed>");
 }
 
-v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
+void clean_error(
+    v8_error& error)
 {
-    auto instance = std::unique_ptr<v8_error>(
-        new v8_error
-            {
-                .message = nullptr,
-                .wavy_underline = nullptr,
-                .location = nullptr,
-                .line_number = 0,
-                .stack_trace = nullptr
-            });
+    error.message = nullptr;
+    error.wavy_underline = nullptr;
+    error.location = nullptr;
+    error.line_number = 0;
+    error.stack_trace = nullptr;
+}
 
+void make_error(
+    v8::Isolate* isolate,
+    v8::TryCatch& try_catch,
+    v8_error* error)
+{
     v8::HandleScope handle_scope(isolate);
 
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
@@ -142,22 +147,22 @@ v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
     {
         if (isolate->IsExecutionTerminating())
         {
-            instance->message = duplicate_string("Script execution terminated");
+            error->message = duplicate_string("Script execution terminated");
         }
         else
         {
-            instance->message = duplicate_string("<V8 didn't provide any information about error>");
+            error->message = duplicate_string("<V8 didn't provide any information about error>");
         }
-        return instance.release();
+        return;
     }
 
-    instance->message = make_string(isolate, message);
+    error->message = make_string(isolate, message);
 
     v8::Local<v8::Message> info = try_catch.Message();
 
     if (info.IsEmpty())
     {
-        return instance.release();
+        return;
     }
 
     v8::Local<v8::String> code_line;
@@ -180,18 +185,18 @@ v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
             text += '~';
         }
 
-        instance->wavy_underline = duplicate_string(text.c_str());
+        error->wavy_underline = duplicate_string(text.c_str());
     }
 
     v8::Local<v8::String> location;
     if (info->GetScriptResourceName()->ToString(context).ToLocal(&location))
     {
-        instance->location = make_string(isolate, location);
+        error->location = make_string(isolate, location);
     }
 
-    if (!info->GetLineNumber(context).To(&instance->line_number))
+    if (!info->GetLineNumber(context).To(&error->line_number))
     {
-        instance->line_number = 0;
+        error->line_number = 0;
     }
 
     v8::Local<v8::StackTrace> stack_trace = info->GetStackTrace();
@@ -246,10 +251,8 @@ v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
             trace += std::to_string(frame->GetLineNumber());
         }
 
-        instance->stack_trace = duplicate_string(trace.c_str());
+        error->stack_trace = duplicate_string(trace.c_str());
     }
-
-    return instance.release();
 }
 
 struct v8_script
@@ -263,12 +266,14 @@ v8_script* v8_compile_script(
     v8_isolate* isolate,
     const char* code,
     const char* location,
-    v8_error** error)
+    v8_error* error)
 {
     if (!isolate || !code || !location || !error)
     {
         return nullptr;
     }
+
+    clean_error(*error);
 
     v8::Isolate::Scope isolate_scope(isolate->isolate_);
 
@@ -303,7 +308,7 @@ v8_script* v8_compile_script(
     v8::Local<v8::Script> script;
     if (!v8::Script::Compile(context, code_str, &origin).ToLocal(&script))
     {
-        *error = make_error(isolate->isolate_, try_catch);
+        make_error(isolate->isolate_, try_catch, error);
         return nullptr;
     }
 
@@ -318,12 +323,14 @@ v8_script* v8_compile_script(
 
 bool v8_run_script(
     v8_script* script,
-    v8_error** error)
+    v8_error* error)
 {
     if (!script || !error)
     {
         return false;
     }
+
+    clean_error(*error);
 
     v8::Isolate* isolate = script->isolate_;
 
@@ -342,11 +349,18 @@ bool v8_run_script(
         v8::Local<v8::Script>::New(isolate, script->script_);
 
     v8::Local<v8::Value> result;
-    if (!compiled_script->Run(context).ToLocal(&result))
+
     {
-        *error = make_error(isolate, try_catch);
-        return false;
+        v8::Isolate::SafeForTerminationScope isolate_scope(isolate);
+
+        if (!compiled_script->Run(context).ToLocal(&result))
+        {
+            make_error(isolate, try_catch, error);
+            return false;
+        }
     }
+
+    isolate->ClearKeptObjects();
 
     return true;
 }

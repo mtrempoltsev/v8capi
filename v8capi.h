@@ -65,13 +65,70 @@ struct v8_script* v8_compile_script(
     struct v8_isolate* isolate,
     const char* code,
     const char* location,
-    struct v8_error** error);
+    struct v8_error* error);
 
-// Runs a JS script. Returns false if an error occurs 
-// and populates the error structure
+struct v8_value;
+
+struct v8_array
+{
+    int64_t size;
+    void* data;
+};
+
+struct v8_pair
+{
+    v8_value* first;
+    v8_value* second;
+};
+
+struct v8_value
+{
+    typedef enum 
+    {
+        // JS               C
+        js_boolean,     // bool
+        js_null,        // void* NULL
+        js_undefined,   // void* NULL
+        js_number,      // see specifiers
+        js_string,      // const char*
+        js_big_int,     // not implemented
+        js_symbol,      // not implemented
+        js_object       // see specifiers
+    } js_types;
+
+    typedef enum
+    {
+        // js number
+        number,         // double
+        int64,          // int64_t
+        int32,          // int32_t
+        uint32,         // uint32_t
+
+        // js object
+        object,         // v8_array* of v8_pair
+        array,          // v8_array* of v8_value
+        map,            // v8_array* of v8_pair
+        set,            // v8_array* of v8_value
+        function,       // not implemented
+        date            // not implemented
+    } type_specifiers;
+
+    js_types type;
+    type_specifiers specifier;
+    void* value;
+};
+
+void v8_delete_value(
+    struct v8_value* value);
+
+// Runs a JS script and returns true if successfull, 
+// the result of execution will be written to
+// the value structure. 
+// If an error occurs then false is returned and 
+// the error structure is populated
 bool v8_run_script(
     struct v8_script* script,
-    struct v8_error** error);
+    struct v8_error* error);
 
 // Terminates the currently running script
 void v8_terminate_script(
