@@ -69,7 +69,7 @@ void check_runtime_errors(v8_isolate* vm)
     ASSERT(err->line_number == 2);
     ASSERT(err->location == std::string("my.js"));
     ASSERT(err->message == std::string("my_err"));
-    ASSERT(err->stack_trace == std::string("    test                  @ my.js:2\n    (anonymouse function) @ my.js:5"));
+    ASSERT(err->stack_trace == std::string("    test                 @ my.js:2\n    (anonymous function) @ my.js:5"));
     ASSERT(err->wavy_underline == std::string("    throw 'my_err'\n    ^"));
 
     v8_delete_error(err);

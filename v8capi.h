@@ -31,8 +31,8 @@ void v8_delete_isolate(
 // x = y
 // ^
 // stack trace :
-// test                  @ my.js:3
-// (anonymouse function) @ my.js:5
+//   test                  @ my.js:3
+//   (anonymous function) @ my.js:5
 //
 // use next pattern:
 //

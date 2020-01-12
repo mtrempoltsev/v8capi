@@ -197,7 +197,7 @@ v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
     v8::Local<v8::StackTrace> stack_trace = info->GetStackTrace();
     if (!stack_trace.IsEmpty() && stack_trace->GetFrameCount() > 0)
     {
-        const std::string anonymouse_function = "(anonymouse function)";
+        const std::string anonymous_function = "(anonymous function)";
 
         int max_function_length = 0;
 
@@ -209,10 +209,10 @@ v8_error* make_error(v8::Isolate* isolate, v8::TryCatch& try_catch)
 
             if (frame->GetFunctionName().IsEmpty())
             {
-                functions.push_back(anonymouse_function);
+                functions.push_back(anonymous_function);
                 max_function_length = std::max(
                     max_function_length, 
-                    static_cast<int>(anonymouse_function.length()));
+                    static_cast<int>(anonymous_function.length()));
             }
             else
             {
