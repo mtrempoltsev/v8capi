@@ -36,7 +36,8 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     )
 
 set (TEST_SOURCES
-    tests/test_simple.cpp
+    tests/test_common.cpp
+    tests/utils.cpp
     )
 
 set (TEST_NAME test_${CMAKE_PROJECT_NAME})
