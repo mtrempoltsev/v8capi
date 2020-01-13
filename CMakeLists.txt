@@ -11,10 +11,12 @@ add_definitions (
 
 set (HEADERS
     include/v8capi.h
+    include/v8capi_values.h
     )
 
 set (SOURCES
     src/v8capi.cpp
+    src/v8capi_values.cpp
     )
 
 include_directories (
@@ -35,29 +37,30 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     pthread
     )
 
-set (TEST_SOURCES
-    tests/test_common.cpp
-    tests/utils.cpp
-    )
-
-set (TEST_NAME test_${CMAKE_PROJECT_NAME})
+enable_testing ()
 
 configure_file (./tests/data/good_script.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/infinite_loop.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/syntax_error.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/throw.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
-add_executable (${TEST_NAME}
-    ${HEADERS}
-    ${TEST_SOURCES}
-    )
+macro (register_test test_name)
+    set (TEST_NAME test_${test_name})
 
-target_link_libraries (${TEST_NAME}
-    ${CMAKE_PROJECT_NAME}
-    v8_monolith
-    pthread
-    )
+    add_executable (${TEST_NAME}
+        ${HEADERS}
+        tests/utils.h tests/utils.cpp
+        tests/${TEST_NAME}.cpp
+        )
 
-enable_testing ()
+    target_link_libraries (${TEST_NAME}
+        ${CMAKE_PROJECT_NAME}
+        v8_monolith
+        pthread
+        )
 
-add_test (tests ${TEST_NAME})
+    add_test (${TEST_NAME} ${TEST_NAME})
+endmacro ()
+
+register_test (common)
+register_test (values)

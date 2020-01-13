@@ -1,4 +1,5 @@
-﻿#include <memory>
+﻿#include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -97,9 +98,9 @@ void v8_delete_error(
 char* duplicate_string(
     const char* string)
 {
-    const size_t length = strlen(string);
+    const size_t length = std::strlen(string);
     auto result = std::make_unique<char[]>(length + 1);
-    memcpy(result.get(), string, length + 1);
+    std::memcpy(result.get(), string, length + 1);
     return result.release();
 }
 
