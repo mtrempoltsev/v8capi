@@ -40,6 +40,10 @@ struct v8_value
     {
         not_special,
 
+        // js string
+        string,         // const char*
+        small_string,   // const char* (without heap allocation)
+
         // js number
         number,         // double
         int64,          // int64_t
@@ -70,7 +74,8 @@ struct v8_value v8_new_map(int64_t size);
 
 void v8_delete_value(struct v8_value* value);
 
-double v8_to_double(void* value);
+double v8_to_double(v8_value* value);
+const char* v8_to_string(v8_value* value);
 
 #ifdef __cplusplus
 }

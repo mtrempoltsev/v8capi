@@ -1,4 +1,5 @@
-﻿#include <cstring>
+﻿#include <cassert>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
@@ -34,6 +35,8 @@ v8_instance* v8_new_instance(
 void v8_delete_instance(
     v8_instance* instance)
 {
+    assert(instance);
+
     if (!instance)
     {
         return;
@@ -71,6 +74,8 @@ v8_isolate* v8_new_isolate()
 void v8_delete_isolate(
     v8_isolate* isolate)
 {
+    assert(isolate);
+
     if (!isolate)
     {
         return;
@@ -84,6 +89,8 @@ void v8_delete_isolate(
 void v8_delete_error(
     v8_error* error)
 {
+    assert(error);
+
     if (!error)
     {
         return;
@@ -269,6 +276,11 @@ v8_script* v8_compile_script(
     const char* location,
     v8_error* error)
 {
+    assert(isolate);
+    assert(code);
+    assert(location);
+    assert(error);
+
     if (!isolate || !code || !location || !error)
     {
         return nullptr;
@@ -326,6 +338,9 @@ bool v8_run_script(
     v8_script* script,
     v8_error* error)
 {
+    assert(script);
+    assert(error);
+
     if (!script || !error)
     {
         return false;
@@ -369,6 +384,8 @@ bool v8_run_script(
 void v8_terminate_script(
     v8_script* script)
 {
+    assert(script);
+
     if (!script)
     {
         return;
@@ -380,6 +397,8 @@ void v8_terminate_script(
 void v8_delete_script(
     v8_script* script)
 {
+    assert(script);
+
     if (!script)
     {
         return;
