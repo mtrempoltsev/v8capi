@@ -334,14 +334,141 @@ v8_script* v8_compile_script(
     return instance.release();
 }
 
+v8_value convert(v8::Local<v8::Context> context, v8::Local<v8::Value> val)
+{
+    if (val->IsNullOrUndefined())
+    {
+        return val->IsUndefined()
+            ? v8_new_undefined()
+            : v8_new_null();
+    }
+
+    if (val->IsNumber())
+    {
+        int64_t int_res;
+        if (val->IntegerValue(context).To(&int_res))
+        {
+            return v8_new_integer(int_res);
+        }
+
+        double res;
+        if (val->NumberValue(context).To(&res))
+        {
+            return v8_new_number(res);
+        }
+
+        assert(!"invalid conversion");
+        return v8_new_undefined();
+    }
+
+    if (val->IsBoolean())
+    {
+        return v8_new_boolean(val->BooleanValue(context->GetIsolate()));
+    }
+
+    if (val->IsString())
+    {
+        v8::String::Utf8Value utf8(context->GetIsolate(), val);
+        return v8_new_string(*utf8, utf8.length());
+    }
+
+    if (val->IsArray())
+    {
+        v8::Array* arr = v8::Array::Cast(*val);
+        const int length = arr->Length();
+
+        v8_value res = v8_new_array(length);
+        auto data = static_cast<v8_value*>(res.data);
+
+        for (int i = 0; i < length; ++i)
+        {
+            v8::Local<v8::Value> elem;
+
+            if (!arr->Get(context, i).ToLocal(&elem))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i] = convert(context, elem);
+        }
+
+        return res;
+    }
+
+    if (val->IsSet())
+    {
+        v8::Set* set = v8::Set::Cast(*val);
+
+        v8::Local<v8::Array> arr = set->AsArray();
+        const int length = arr->Length();
+
+        v8_value res = v8_new_set(length);
+        auto data = static_cast<v8_value*>(res.data);
+
+        for (int i = 0; i < length; ++i)
+        {
+            v8::Local<v8::Value> elem;
+
+            if (!arr->Get(context, i).ToLocal(&elem))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i] = convert(context, elem);
+        }
+
+        return res;
+    }
+
+    if (val->IsMap())
+    {
+        v8::Map* map = v8::Map::Cast(*val);
+
+        v8::Local<v8::Array> arr = map->AsArray();
+        const int length = arr->Length();
+
+        v8_value res = v8_new_map(length / 2);
+        auto data = static_cast<v8_pair_value*>(res.data);
+
+        for (int i = 0; i < length; i += 2)
+        {
+            v8::Local<v8::Value> k;
+            if (!arr->Get(context, i).ToLocal(&k))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            v8::Local<v8::Value> v;
+            if (!arr->Get(context, i).ToLocal(&v))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i].first = convert(context, k);
+            data[i].second = convert(context, v);
+        }
+
+        return res;
+    }
+
+    assert(!"Not implemented type");
+    return v8_new_undefined();
+}
+
 bool v8_run_script(
     v8_script* script,
+    v8_value* result,
     v8_error* error)
 {
     assert(script);
+    assert(result);
     assert(error);
 
-    if (!script || !error)
+    if (!script || !result || !error)
     {
         return false;
     }
@@ -364,17 +491,19 @@ bool v8_run_script(
     v8::Local<v8::Script> compiled_script =
         v8::Local<v8::Script>::New(isolate, script->script_);
 
-    v8::Local<v8::Value> result;
+    v8::Local<v8::Value> ret_val;
 
     {
         v8::Isolate::SafeForTerminationScope isolate_scope(isolate);
 
-        if (!compiled_script->Run(context).ToLocal(&result))
+        if (!compiled_script->Run(context).ToLocal(&ret_val))
         {
             make_error(isolate, try_catch, error);
             return false;
         }
     }
+
+    *result = convert(context, ret_val);
 
     isolate->ClearKeptObjects();
 

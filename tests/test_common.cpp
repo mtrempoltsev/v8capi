@@ -51,7 +51,9 @@ SECTION("Test runtime errors")
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
 
-    const bool ok = v8_run_script(script, &err);
+    v8_value res;
+
+    const bool ok = v8_run_script(script, &res, &err);
 
     EXPECT(ok == false);
 
@@ -62,7 +64,6 @@ SECTION("Test runtime errors")
     EXPECT(err.wavy_underline == std::string("    throw 'my_err'\n    ^"));
 
     v8_delete_error(&err);
-
     v8_delete_script(script);
 }
 
@@ -81,9 +82,14 @@ SECTION("Test normal execution")
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
 
-    bool ok = v8_run_script(script, &err);
+    v8_value res;
+
+    const bool ok = v8_run_script(script, &res, &err);
 
     EXPECT(ok == true);
+
+    EXPECT(v8_is_int64(res) == true);
+    EXPECT(v8_to_int64(res) == 4);
 
     EXPECT(err.line_number == 0);
     EXPECT(err.location == nullptr);
@@ -91,6 +97,8 @@ SECTION("Test normal execution")
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
 
+    v8_delete_value(&res);
+    v8_delete_error(&err);
     v8_delete_script(script);
 }
 
@@ -112,7 +120,9 @@ SECTION("Test script termination")
     v8_script* s2 =
         v8_compile_script(vm, read_file("good_script.js").c_str(), "my.js", &err);
 
-    v8_run_script(s2, &err);
+    v8_value res;
+
+    v8_run_script(s2, &res, &err);
 
     EXPECT(s2 != nullptr);
 
@@ -122,6 +132,9 @@ SECTION("Test script termination")
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
 
+    v8_delete_value(&res);
+    v8_delete_error(&err);
+
     std::thread killer(
         [s1]()
         {
@@ -129,7 +142,7 @@ SECTION("Test script termination")
             v8_terminate_script(s1);
         });
 
-    bool ok = v8_run_script(s1, &err);
+    bool ok = v8_run_script(s1, &res, &err);
 
     killer.join();
 
@@ -141,9 +154,10 @@ SECTION("Test script termination")
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
 
+    v8_delete_value(&res);
     v8_delete_error(&err);
 
-    ok = v8_run_script(s2, &err);
+    ok = v8_run_script(s2, &res, &err);
 
     EXPECT(ok == true);
 
@@ -152,6 +166,9 @@ SECTION("Test script termination")
     EXPECT(err.message == nullptr);
     EXPECT(err.stack_trace == nullptr);
     EXPECT(err.wavy_underline == nullptr);
+
+    v8_delete_value(&res);
+    v8_delete_error(&err);
 
     v8_delete_script(s1);
     v8_delete_script(s2);

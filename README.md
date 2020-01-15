@@ -9,7 +9,7 @@ struct v8_isolate* vm = v8_new_isolate();
 struct v8_error error;
 
 struct v8_script* script =
-    v8_compile_script(vm, read_file("my_script.js"), "my_script.js", &error);
+    v8_compile_script(vm, "2 + 2", "my_script.js", &error);
 
 if (!script)
 {
@@ -22,7 +22,8 @@ if (!script)
 }
 else
 {
-    if (!v8_run_script(script, &error)
+    v8_value result;
+    if (!v8_run_script(script, &result, &error)
     {
         printf("%s:%d: %s\n%s\nstack trace:\n%s\n",
             error.location,
@@ -31,6 +32,11 @@ else
             error.wavy_underline,
             error.stack_trace)
         v8_delete_error(&error);
+    }
+    else
+    {
+        printf("result = %d", v8_to_int64(result));
+        v8_delete_value(result);
     }
 
     v8_delete_script(script);

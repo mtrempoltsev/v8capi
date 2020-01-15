@@ -73,12 +73,13 @@ struct v8_script* v8_compile_script(
     struct v8_error* error);
 
 // Runs a JS script and returns true if successfull, 
-// the result of execution will be written to
-// the value structure. 
+// the result of execution will be written to the result 
+// structure.
 // If an error occurs then false is returned and 
 // the error structure is populated
 bool v8_run_script(
     struct v8_script* script,
+    struct v8_value* result,
     struct v8_error* error);
 
 // Terminates the currently running script

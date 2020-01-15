@@ -465,10 +465,20 @@ void v8_delete_value(v8_value* value)
         return;
     case js_types::array:
     case js_types::set:
+        for (int i = 0; i < val_impl.size; ++i)
+        {
+            v8_delete_value(&static_cast<v8_value*>(val_impl.data)[i]);
+        }
         delete[] static_cast<v8_value*>(val_impl.data);
         set_undefined(value);
         return;
     case js_types::map:
+        for (int i = 0; i < val_impl.size; ++i)
+        {
+            auto pair = &static_cast<v8_pair_value*>(val_impl.data)[i];
+            v8_delete_value(&pair->first);
+            v8_delete_value(&pair->second);
+        }
         delete[] static_cast<v8_pair_value*>(val_impl.data);
         set_undefined(value);
         return;
