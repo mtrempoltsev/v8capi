@@ -30,6 +30,12 @@ struct v8_value
     int64_t specifiers;
 };
 
+struct v8_string_value
+{
+    int32_t size;
+    const char* data;
+};
+
 struct v8_array_value
 {
     int32_t size;
@@ -80,7 +86,7 @@ int v8_get_value_type(struct v8_value value);
 bool v8_to_bool(struct v8_value value);
 double v8_to_double(struct v8_value value);
 int64_t v8_to_int64(struct v8_value value);
-const char* v8_to_string(struct v8_value* value);
+struct v8_string_value v8_to_string(struct v8_value* value);
 struct v8_array_value v8_to_array(struct v8_value value);
 struct v8_set_value v8_to_set(struct v8_value value);
 struct v8_map_value v8_to_map(struct v8_value value);

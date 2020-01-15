@@ -232,31 +232,32 @@ SECTION("Test to_double")
 
     {
         v8_value val = v8_new_integer(0);
-        EXPECT((uint64_t)v8_to_double(val) == 0u);
+        EXPECT(static_cast<uint64_t>(v8_to_double(val)) == 0u);
     }
 
     {
         v8_value val = v8_new_integer(1);
-        EXPECT((uint64_t)v8_to_double(val) == 1u);
+        EXPECT(static_cast<uint64_t>(v8_to_double(val)) == 1u);
     }
 
     {
         v8_value val = v8_new_integer(-1);
-        EXPECT((int32_t)v8_to_double(val) == -1);
+        EXPECT(static_cast<int32_t>(v8_to_double(val)) == -1);
     }
 
     {
         const auto x = static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1;
         v8_value val = v8_new_integer(x);
-        EXPECT((int64_t)v8_to_double(val) == x);
+        EXPECT(static_cast<int64_t>(v8_to_double(val)) == x);
     }
 
     {
         const auto x = static_cast<int64_t>(std::numeric_limits<int32_t>::min()) - 1;
         v8_value val = v8_new_integer(x);
-        EXPECT((int64_t)v8_to_double(val) == x);
+        EXPECT(static_cast<int64_t>(v8_to_double(val)) == x);
     }
 }
+
 SECTION("Test string")
 {
     {
@@ -275,7 +276,10 @@ SECTION("Test string")
         EXPECT(v8_is_set(val) == false);
         EXPECT(v8_is_map(val) == false);
 
-        EXPECT(*v8_to_string(&val) == '\0');
+        v8_string_value str = v8_to_string(&val);
+
+        EXPECT(str.size == 0);
+        EXPECT(*str.data == '\0');
 
         v8_delete_value(&val);
 
@@ -290,7 +294,11 @@ SECTION("Test string")
 
         EXPECT(v8_get_value_type(val) == v8_string);
         EXPECT(v8_is_string(val));
-        EXPECT(v8_to_string(&val) == x);
+
+        v8_string_value str = v8_to_string(&val);
+
+        EXPECT(static_cast<size_t>(str.size) == x.length());
+        EXPECT(str.data == x);
 
         v8_delete_value(&val);
 
@@ -305,13 +313,183 @@ SECTION("Test string")
 
         EXPECT(v8_get_value_type(val) == v8_string);
         EXPECT(v8_is_string(val));
-        EXPECT(v8_to_string(&val) == x);
+
+        v8_string_value str = v8_to_string(&val);
+
+        EXPECT(static_cast<size_t>(str.size) == x.length());
+        EXPECT(str.data == x);
 
         v8_delete_value(&val);
 
         EXPECT(v8_get_value_type(val) == v8_undefined);
         EXPECT(v8_is_undefined(val));
     }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        v8_string_value str = v8_to_string(&val);
+
+        EXPECT(str.size == 0);
+        EXPECT(str.data == nullptr);
+    }
+
+    {
+        v8_value val = v8_new_string("", -1);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val) == true);
+        EXPECT(v8_is_string(val) == false);
+    }
+#endif
+}
+
+SECTION("Test array")
+{
+    {
+        v8_value val = v8_new_array(1);
+
+        EXPECT(v8_get_value_type(val) == v8_array);
+
+        EXPECT(v8_is_undefined(val) == false);
+        EXPECT(v8_is_boolean(val) == false);
+        EXPECT(v8_is_null(val) == false);
+        EXPECT(v8_is_number(val) == false);
+        EXPECT(v8_is_double(val) == false);
+        EXPECT(v8_is_int64(val) == false);
+        EXPECT(v8_is_string(val) == false);
+        EXPECT(v8_is_array(val) == true);
+        EXPECT(v8_is_set(val) == false);
+        EXPECT(v8_is_map(val) == false);
+
+        v8_array_value arr = v8_to_array(val);
+
+        EXPECT(arr.size == 1);
+        EXPECT(arr.data != nullptr);
+
+        v8_delete_value(&val);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val));
+    }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        v8_array_value arr = v8_to_array(val);
+
+        EXPECT(arr.size == 0);
+        EXPECT(arr.data == nullptr);
+    }
+
+    {
+        v8_value val = v8_new_array(0);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val) == true);
+        EXPECT(v8_is_array(val) == false);
+    }
+#endif
+}
+
+SECTION("Test set")
+{
+    {
+        v8_value val = v8_new_set(1);
+
+        EXPECT(v8_get_value_type(val) == v8_set);
+
+        EXPECT(v8_is_undefined(val) == false);
+        EXPECT(v8_is_boolean(val) == false);
+        EXPECT(v8_is_null(val) == false);
+        EXPECT(v8_is_number(val) == false);
+        EXPECT(v8_is_double(val) == false);
+        EXPECT(v8_is_int64(val) == false);
+        EXPECT(v8_is_string(val) == false);
+        EXPECT(v8_is_array(val) == false);
+        EXPECT(v8_is_set(val) == true);
+        EXPECT(v8_is_map(val) == false);
+
+        v8_set_value arr = v8_to_set(val);
+
+        EXPECT(arr.size == 1);
+        EXPECT(arr.data != nullptr);
+
+        v8_delete_value(&val);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val));
+    }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        v8_set_value arr = v8_to_set(val);
+
+        EXPECT(arr.size == 0);
+        EXPECT(arr.data == nullptr);
+    }
+
+    {
+        v8_value val = v8_new_array(0);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val) == true);
+        EXPECT(v8_is_set(val) == false);
+    }
+#endif
+}
+
+SECTION("Test map")
+{
+    {
+        v8_value val = v8_new_map(1);
+
+        EXPECT(v8_get_value_type(val) == v8_map);
+
+        EXPECT(v8_is_undefined(val) == false);
+        EXPECT(v8_is_boolean(val) == false);
+        EXPECT(v8_is_null(val) == false);
+        EXPECT(v8_is_number(val) == false);
+        EXPECT(v8_is_double(val) == false);
+        EXPECT(v8_is_int64(val) == false);
+        EXPECT(v8_is_string(val) == false);
+        EXPECT(v8_is_array(val) == false);
+        EXPECT(v8_is_set(val) == false);
+        EXPECT(v8_is_map(val) == true);
+
+        v8_map_value arr = v8_to_map(val);
+
+        EXPECT(arr.size == 1);
+        EXPECT(arr.data != nullptr);
+
+        v8_delete_value(&val);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val));
+    }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        v8_map_value arr = v8_to_map(val);
+
+        EXPECT(arr.size == 0);
+        EXPECT(arr.data == nullptr);
+    }
+
+    {
+        v8_value val = v8_new_map(0);
+
+        EXPECT(v8_get_value_type(val) == v8_undefined);
+        EXPECT(v8_is_undefined(val) == true);
+        EXPECT(v8_is_map(val) == false);
+    }
+#endif
 }
 }
 }

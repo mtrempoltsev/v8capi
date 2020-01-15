@@ -163,11 +163,65 @@ v8_value v8_new_string(const char* value, int32_t length)
     return to_value(val_impl);
 }
 
-/*
 v8_value v8_new_array(int32_t size)
-v8_value v8_new_set(int32_t size);
-v8_value v8_new_map(int32_t size);
-*/
+{
+    assert(size > 0);
+
+    if (size <= 0)
+    {
+        return v8_new_undefined();
+    }
+
+    v8_value_impl val_impl =
+    {
+        new v8_value[size],
+        js_types::array,
+        type_specifiers::not_special,
+        size
+    };
+
+    return to_value(val_impl);
+}
+
+v8_value v8_new_set(int32_t size)
+{
+    assert(size > 0);
+
+    if (size <= 0)
+    {
+        return v8_new_undefined();
+    }
+
+    v8_value_impl val_impl =
+    {
+        new v8_value[size],
+        js_types::set,
+        type_specifiers::not_special,
+        size
+    };
+
+    return to_value(val_impl);
+}
+
+v8_value v8_new_map(int32_t size)
+{
+    assert(size > 0);
+
+    if (size <= 0)
+    {
+        return v8_new_undefined();
+    }
+
+    v8_value_impl val_impl =
+    {
+        new v8_pair_value[size],
+        js_types::map,
+        type_specifiers::not_special,
+        size
+    };
+
+    return to_value(val_impl);
+}
 
 bool v8_is_undefined(v8_value value)
 {
@@ -267,13 +321,17 @@ int64_t v8_to_int64(v8_value value)
     return reinterpret_cast<int64_t>(value.data);
 }
 
-const char* v8_to_string(v8_value* value)
+v8_string_value v8_to_string(v8_value* value)
 {
     assert(value);
 
     if (!value)
     {
-        return nullptr;
+        return
+        {
+            0,
+            nullptr
+        };
     }
 
     const auto val_impl = to_value_impl(*value);
@@ -282,12 +340,86 @@ const char* v8_to_string(v8_value* value)
 
     if (val_impl.type != js_types::string)
     {
-        return nullptr;
+        return
+        {
+            0,
+            nullptr
+        };
     }
 
-    return static_cast<size_t>(val_impl.size) < sizeof(void*)
-        ? reinterpret_cast<const char*>(&value->data)
-        : static_cast<const char*>(value->data);
+    return
+    {
+        val_impl.size,
+        static_cast<size_t>(val_impl.size) < sizeof(void*)
+            ? reinterpret_cast<const char*>(&value->data)
+            : static_cast<const char*>(value->data)
+    };
+}
+
+v8_array_value v8_to_array(struct v8_value value)
+{
+    const auto val_impl = to_value_impl(value);
+
+    assert(val_impl.type == js_types::array);
+
+    if (val_impl.type != js_types::array)
+    {
+        return
+        {
+            0,
+            nullptr
+        };
+    }
+
+    return
+    {
+        val_impl.size,
+        static_cast<v8_value*>(val_impl.data)
+    };
+}
+
+v8_set_value v8_to_set(struct v8_value value)
+{
+    const auto val_impl = to_value_impl(value);
+
+    assert(val_impl.type == js_types::set);
+
+    if (val_impl.type != js_types::set)
+    {
+        return
+        {
+            0,
+            nullptr
+        };
+    }
+
+    return
+    {
+        val_impl.size,
+        static_cast<v8_value*>(val_impl.data)
+    };
+}
+
+v8_map_value v8_to_map(struct v8_value value)
+{
+    const auto val_impl = to_value_impl(value);
+
+    assert(val_impl.type == js_types::map);
+
+    if (val_impl.type != js_types::map)
+    {
+        return
+        {
+            0,
+            nullptr
+        };
+    }
+
+    return
+    {
+        val_impl.size,
+        static_cast<v8_pair_value*>(val_impl.data)
+    };
 }
 
 void set_undefined(v8_value* value)
@@ -321,6 +453,30 @@ void v8_delete_value(v8_value* value)
             delete[] static_cast<char*>(val_impl.data);
         }
         set_undefined(value);
+        return;
+    case js_types::big_int:
+        assert(!"not implemented");
+        return;
+    case js_types::symbol:
+        assert(!"not implemented");
+        return;
+    case js_types::object:
+        assert(!"not implemented");
+        return;
+    case js_types::array:
+    case js_types::set:
+        delete[] static_cast<v8_value*>(val_impl.data);
+        set_undefined(value);
+        return;
+    case js_types::map:
+        delete[] static_cast<v8_pair_value*>(val_impl.data);
+        set_undefined(value);
+        return;
+    case js_types::function:
+        assert(!"not implemented");
+        return;
+    case js_types::date:
+        assert(!"not implemented");
         return;
     }
 }
