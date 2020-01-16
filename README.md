@@ -17,26 +17,26 @@ if (!script)
         error.location,
         error.line_number,
         error.message,
-        error.wavy_underline)
+        error.wavy_underline);
     v8_delete_error(&error);
 }
 else
 {
-    v8_value result;
-    if (!v8_run_script(script, &result, &error)
+    struct v8_value result;
+    if (!v8_run_script(script, &result, &error))
     {
         printf("%s:%d: %s\n%s\nstack trace:\n%s\n",
             error.location,
             error.line_number,
             error.message,
             error.wavy_underline,
-            error.stack_trace)
+            error.stack_trace);
         v8_delete_error(&error);
     }
     else
     {
-        printf("result = %d", v8_to_int64(result));
-        v8_delete_value(result);
+        printf("result = %ld\n", v8_to_int64(result));
+        v8_delete_value(&result);
     }
 
     v8_delete_script(script);
