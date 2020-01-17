@@ -81,6 +81,8 @@ void v8_delete_isolate(
         return;
     }
 
+    v8::Locker locker(isolate->isolate_);
+
     isolate->isolate_->Dispose();
 
     delete isolate;
@@ -290,6 +292,8 @@ v8_script* v8_compile_script(
 
     v8::Isolate::Scope isolate_scope(isolate->isolate_);
 
+    v8::Locker locker(isolate->isolate_);
+
     v8::HandleScope handle_scope(isolate->isolate_);
 
     v8::Local<v8::String> code_str;
@@ -478,6 +482,8 @@ bool v8_run_script(
     v8::Isolate* isolate = script->isolate_;
 
     v8::Isolate::Scope isolate_scope(isolate);
+
+    v8::Locker locker(isolate);
 
     v8::HandleScope handle_scope(isolate);
 

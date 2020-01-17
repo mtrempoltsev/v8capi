@@ -67,4 +67,5 @@ macro (register_test test_name)
 endmacro ()
 
 register_test (common)
+register_test (multiisolates)
 register_test (values)
