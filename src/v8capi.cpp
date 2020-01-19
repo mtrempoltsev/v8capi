@@ -7,6 +7,8 @@
 #include <libplatform/libplatform.h>
 #include <v8.h>
 
+#include "v8capi_value_helpers.h"
+
 #include "../include/v8capi.h"
 
 struct v8_instance
@@ -80,8 +82,6 @@ void v8_delete_isolate(
     {
         return;
     }
-
-    v8::Locker locker(isolate->isolate_);
 
     isolate->isolate_->Dispose();
 
@@ -338,131 +338,6 @@ v8_script* v8_compile_script(
     return instance.release();
 }
 
-v8_value convert(v8::Local<v8::Context> context, v8::Local<v8::Value> val)
-{
-    if (val->IsNullOrUndefined())
-    {
-        return val->IsUndefined()
-            ? v8_new_undefined()
-            : v8_new_null();
-    }
-
-    if (val->IsNumber())
-    {
-        int64_t int_res;
-        if (val->IntegerValue(context).To(&int_res))
-        {
-            return v8_new_integer(int_res);
-        }
-
-        double res;
-        if (val->NumberValue(context).To(&res))
-        {
-            return v8_new_number(res);
-        }
-
-        assert(!"invalid conversion");
-        return v8_new_undefined();
-    }
-
-    if (val->IsBoolean())
-    {
-        return v8_new_boolean(val->BooleanValue(context->GetIsolate()));
-    }
-
-    if (val->IsString())
-    {
-        v8::String::Utf8Value utf8(context->GetIsolate(), val);
-        return v8_new_string(*utf8, utf8.length());
-    }
-
-    if (val->IsArray())
-    {
-        v8::Array* arr = v8::Array::Cast(*val);
-        const int length = arr->Length();
-
-        v8_value res = v8_new_array(length);
-        auto data = static_cast<v8_value*>(res.data);
-
-        for (int i = 0; i < length; ++i)
-        {
-            v8::Local<v8::Value> elem;
-
-            if (!arr->Get(context, i).ToLocal(&elem))
-            {
-                assert(!"invalid conversion");
-                return v8_new_undefined();
-            }
-
-            data[i] = convert(context, elem);
-        }
-
-        return res;
-    }
-
-    if (val->IsSet())
-    {
-        v8::Set* set = v8::Set::Cast(*val);
-
-        v8::Local<v8::Array> arr = set->AsArray();
-        const int length = arr->Length();
-
-        v8_value res = v8_new_set(length);
-        auto data = static_cast<v8_value*>(res.data);
-
-        for (int i = 0; i < length; ++i)
-        {
-            v8::Local<v8::Value> elem;
-
-            if (!arr->Get(context, i).ToLocal(&elem))
-            {
-                assert(!"invalid conversion");
-                return v8_new_undefined();
-            }
-
-            data[i] = convert(context, elem);
-        }
-
-        return res;
-    }
-
-    if (val->IsMap())
-    {
-        v8::Map* map = v8::Map::Cast(*val);
-
-        v8::Local<v8::Array> arr = map->AsArray();
-        const int length = arr->Length();
-
-        v8_value res = v8_new_map(length / 2);
-        auto data = static_cast<v8_pair_value*>(res.data);
-
-        for (int i = 0; i < length; i += 2)
-        {
-            v8::Local<v8::Value> k;
-            if (!arr->Get(context, i).ToLocal(&k))
-            {
-                assert(!"invalid conversion");
-                return v8_new_undefined();
-            }
-
-            v8::Local<v8::Value> v;
-            if (!arr->Get(context, i).ToLocal(&v))
-            {
-                assert(!"invalid conversion");
-                return v8_new_undefined();
-            }
-
-            data[i].first = convert(context, k);
-            data[i].second = convert(context, v);
-        }
-
-        return res;
-    }
-
-    assert(!"Not implemented type");
-    return v8_new_undefined();
-}
-
 bool v8_run_script(
     v8_script* script,
     v8_value* result,
@@ -509,10 +384,7 @@ bool v8_run_script(
         }
     }
 
-    *result = convert(context, ret_val);
-
-    isolate->ClearKeptObjects();
-
+    *result = from_v8_value(context, ret_val);
     return true;
 }
 
@@ -543,4 +415,148 @@ void v8_delete_script(
     script->script_.Reset();
 
     delete script;
+}
+
+struct v8_callable
+{
+    v8_script* script_;
+    v8::Persistent<v8::Function> func_;
+};
+
+v8_callable* v8_get_function(
+    struct v8_script* script,
+    const char* name)
+{
+    assert(script);
+    assert(name);
+
+    if (!script || !name)
+    {
+        return nullptr;
+    }
+
+    v8::Isolate::Scope isolate_scope(script->isolate_);
+
+    v8::Locker locker(script->isolate_);
+
+    v8::HandleScope handle_scope(script->isolate_);
+
+    v8::Local<v8::String> func_name;
+
+    if (!v8::String::NewFromUtf8(
+        script->isolate_, name, v8::NewStringType::kNormal).ToLocal(&func_name))
+    {
+        return nullptr;
+    }
+
+    v8::Local<v8::Context> context =
+        v8::Local<v8::Context>::New(script->isolate_, script->context_);
+
+    v8:: Local<v8::Value> func;
+    if (!context->Global()->Get(context, func_name).ToLocal(&func))
+    {
+        return nullptr;
+    }
+
+    if (!func->IsFunction())
+    {
+        return nullptr;
+    }
+
+    auto instance = std::make_unique<v8_callable>();
+
+    instance->script_ = script;
+    instance->func_.Reset(script->isolate_, v8::Local<v8::Function>::Cast(func));
+
+    return instance.release();
+}
+
+bool v8_call_function(
+    v8_callable* func,
+    int argc,
+    v8_value* argv,
+    v8_value* result,
+    v8_error* error)
+{
+    assert(func);
+    assert(error);
+
+    if (!func || !error)
+    {
+        return false;
+    }
+
+    assert(argc >= 0);
+
+    if (argc < 0)
+    {
+        return false;
+    }
+    else if (argc == 0)
+    {
+        assert(!argv);
+
+        if (argv)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        assert(argv);
+
+        if (!argv)
+        {
+            return false;
+        }
+    }
+
+    v8::Isolate* isolate = func->script_->isolate_;
+
+    v8::Isolate::Scope isolate_scope(isolate);
+
+    v8::Locker locker(isolate);
+
+    v8::HandleScope handle_scope(isolate);
+
+    v8::Local<v8::Context> context =
+        v8::Local<v8::Context>::New(isolate, func->script_->context_);
+
+    v8::Context::Scope context_scope(context);
+
+    v8::TryCatch try_catch(isolate);
+
+    auto args = std::make_unique<v8::Local<v8::Value>[]>(argc);
+    for (int i = 0; i < argc; ++i)
+    {
+        args[i] = to_v8_value(context, argv[i]);
+    }
+
+    v8::Local<v8::Function> callable =
+        v8::Local<v8::Function>::New(isolate, func->func_);
+
+    v8::Local<v8::Value> res;
+    if (!callable->Call(context, context->Global(), argc, args.get()).ToLocal(&res))
+    {
+        make_error(isolate, try_catch, error);
+        return false;
+    }
+
+    *result = from_v8_value(context, res);
+    return true;
+}
+
+void v8_delete_function(
+    struct v8_callable* func)
+{
+    assert(func);
+
+    if (!func)
+    {
+        return;
+    }
+
+    func->func_.Reset();
+
+    delete func;
 }

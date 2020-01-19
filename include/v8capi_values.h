@@ -85,6 +85,8 @@ int v8_get_value_type(struct v8_value value);
 
 bool v8_to_bool(struct v8_value value);
 double v8_to_double(struct v8_value value);
+int32_t v8_to_int32(struct v8_value value);
+uint32_t v8_to_uint32(struct v8_value value);
 int64_t v8_to_int64(struct v8_value value);
 struct v8_string_value v8_to_string(struct v8_value* value);
 struct v8_array_value v8_to_array(struct v8_value value);

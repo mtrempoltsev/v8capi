@@ -89,6 +89,29 @@ void v8_terminate_script(
 void v8_delete_script(
     struct v8_script* script);
 
+struct v8_callable;
+
+// Get JS function from compiled script. Returns NULL 
+// if there is no function with specified name
+struct v8_callable* v8_get_function(
+    struct v8_script* script,
+    const char* name);
+
+// Calls a JS function and returns true if successfull, 
+// the result of execution will be written to the result 
+// structure.
+// If an error occurs then false is returned and 
+// the error structure is populated
+bool v8_call_function(
+    struct v8_callable* func,
+    int argc,
+    struct v8_value* argv,
+    struct v8_value* result,
+    struct v8_error* error);
+
+void v8_delete_function(
+    struct v8_callable* func);
+
 #ifdef __cplusplus
 }
 #endif

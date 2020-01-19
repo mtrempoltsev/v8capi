@@ -3,6 +3,10 @@
 #include <cstring>
 #include <limits>
 
+#include <v8.h>
+
+#include "v8capi_value_helpers.h"
+
 #include "../include/v8capi_values.h"
 
 enum class js_types : int16_t
@@ -316,6 +320,16 @@ double v8_to_double(v8_value value)
     return static_cast<double>(reinterpret_cast<int64_t>(val_impl.data));
 }
 
+int32_t v8_to_int32(v8_value value)
+{
+    return static_cast<int32_t>(v8_to_int64(value));
+}
+
+uint32_t v8_to_uint32(v8_value value)
+{
+    return static_cast<uint32_t>(v8_to_int64(value));
+}
+
 int64_t v8_to_int64(v8_value value)
 {
     return reinterpret_cast<int64_t>(value.data);
@@ -489,4 +503,203 @@ void v8_delete_value(v8_value* value)
         assert(!"not implemented");
         return;
     }
+}
+
+v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> value)
+{
+    if (value->IsNullOrUndefined())
+    {
+        return value->IsUndefined()
+            ? v8_new_undefined()
+            : v8_new_null();
+    }
+
+    if (value->IsNumber())
+    {
+        int64_t int_res;
+        if (value->IntegerValue(context).To(&int_res))
+        {
+            return v8_new_integer(int_res);
+        }
+
+        double res;
+        if (value->NumberValue(context).To(&res))
+        {
+            return v8_new_number(res);
+        }
+
+        assert(!"invalid conversion");
+        return v8_new_undefined();
+    }
+
+    if (value->IsBoolean())
+    {
+        return v8_new_boolean(value->BooleanValue(context->GetIsolate()));
+    }
+
+    if (value->IsString())
+    {
+        v8::String::Utf8Value utf8(context->GetIsolate(), value);
+        return v8_new_string(*utf8, utf8.length());
+    }
+
+    if (value->IsArray())
+    {
+        v8::Array* arr = v8::Array::Cast(*value);
+        const int length = arr->Length();
+
+        v8_value res = v8_new_array(length);
+        auto data = static_cast<v8_value*>(res.data);
+
+        for (int i = 0; i < length; ++i)
+        {
+            v8::Local<v8::Value> elem;
+
+            if (!arr->Get(context, i).ToLocal(&elem))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i] = from_v8_value(context, elem);
+        }
+
+        return res;
+    }
+
+    if (value->IsSet())
+    {
+        v8::Set* set = v8::Set::Cast(*value);
+
+        v8::Local<v8::Array> arr = set->AsArray();
+        const int length = arr->Length();
+
+        v8_value res = v8_new_set(length);
+        auto data = static_cast<v8_value*>(res.data);
+
+        for (int i = 0; i < length; ++i)
+        {
+            v8::Local<v8::Value> elem;
+
+            if (!arr->Get(context, i).ToLocal(&elem))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i] = from_v8_value(context, elem);
+        }
+
+        return res;
+    }
+
+    if (value->IsMap())
+    {
+        v8::Map* map = v8::Map::Cast(*value);
+
+        v8::Local<v8::Array> arr = map->AsArray();
+        const int length = arr->Length();
+
+        v8_value res = v8_new_map(length / 2);
+        auto data = static_cast<v8_pair_value*>(res.data);
+
+        for (int i = 0; i < length; i += 2)
+        {
+            v8::Local<v8::Value> k;
+            if (!arr->Get(context, i).ToLocal(&k))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            v8::Local<v8::Value> v;
+            if (!arr->Get(context, i).ToLocal(&v))
+            {
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i].first = from_v8_value(context, k);
+            data[i].second = from_v8_value(context, v);
+        }
+
+        return res;
+    }
+
+    assert(!"Not implemented type");
+    return v8_new_undefined();
+}
+
+v8::Local<v8::Value> to_v8_value(v8::Local<v8::Context> context, v8_value value)
+{
+    v8::Isolate* isolate = context->GetIsolate();
+
+    v8::EscapableHandleScope handle_scope(isolate);
+
+    v8::Local<v8::Value> result;
+
+    const auto val_impl = to_value_impl(value);
+
+    switch (val_impl.type)
+    {
+    case js_types::undefined:
+        return handle_scope.Escape(v8::Undefined(isolate));
+    case js_types::boolean:
+        return v8_to_bool(value)
+            ? handle_scope.Escape(v8::True(isolate))
+            : handle_scope.Escape(v8::False(isolate));
+    case js_types::null:
+        return handle_scope.Escape(v8::Null(isolate));
+    case js_types::number:
+        switch (val_impl.specifier)
+        {
+        case type_specifiers::not_special:
+            assert(!"Invalid value");
+            return handle_scope.Escape(v8::Undefined(isolate));
+        case type_specifiers::number:
+            return handle_scope.Escape(v8::Number::New(isolate, v8_to_double(value)));
+        case type_specifiers::int64:
+            // TODO maybe BigInt?
+            return handle_scope.Escape(v8::Number::New(isolate, v8_to_double(value)));
+        case type_specifiers::int32:
+            return handle_scope.Escape(v8::Integer::New(isolate, v8_to_int32(value)));
+        case type_specifiers::uint32:
+            return handle_scope.Escape(v8::Integer::NewFromUnsigned(isolate, v8_to_uint32(value)));
+        }
+        break;
+    case js_types::string:
+    {
+        const auto str = v8_to_string(&value);
+        v8::Local<v8::String> val;
+        if (!v8::String::NewFromUtf8(isolate, str.data, v8::NewStringType::kNormal, str.size).ToLocal(&val))
+        {
+            assert(!"Invalid string conversion");
+            return handle_scope.Escape(v8::Undefined(isolate));
+        }
+        return handle_scope.Escape(val);
+    }
+    case js_types::big_int:
+        assert(!"not implemented");
+        break;
+    case js_types::symbol:
+        assert(!"not implemented");
+        break;
+    case js_types::object:
+        assert(!"not implemented");
+        break;
+    case js_types::array:
+        break;
+    case js_types::set:
+        break;
+    case js_types::map:
+        break;
+    case js_types::function:
+        assert(!"not implemented");
+        break;
+    case js_types::date:
+        assert(!"not implemented");
+        break;
+    }
+
+    return handle_scope.Escape(v8::Undefined(isolate));
 }
