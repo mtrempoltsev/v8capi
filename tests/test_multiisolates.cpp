@@ -1,28 +1,14 @@
 ﻿#include <thread>
 
-#include "lest.hpp"
+#include <gtest/gtest.h>
 
 #include "utils.h"
 
 #include "../include/v8capi.h"
 
-const lest::test specification[] =
-{
-CASE("Test multi isolates")
-{
-SETUP("With two isolates")
-{
-v8_isolate* vm1 = v8_new_isolate();
-v8_isolate* vm2 = v8_new_isolate();
-v8_isolate* vm3 = v8_new_isolate();
-v8_isolate* vm4 = v8_new_isolate();
+#include "isolate_fixture.h"
 
-EXPECT(vm1 != nullptr);
-EXPECT(vm2 != nullptr);
-EXPECT(vm3 != nullptr);
-EXPECT(vm4 != nullptr);
-
-SECTION("Two threads")
+TEST_F(SomeIsolatesFixture, SomeIsolatesFixture)
 {
     const int N = 100;
 
@@ -34,7 +20,7 @@ SECTION("Two threads")
     std::string code = read_file("good_script.js");
 
     std::thread t1(
-        [vm1, code, &res1]()
+        [vm1 = this->vm1, code, &res1]()
         {
             v8_error err;
             v8_value res;
@@ -54,7 +40,7 @@ SECTION("Two threads")
         });
 
     std::thread t2(
-        [vm2, code, &res2]()
+        [vm2 = this->vm2, code, &res2]()
         {
             v8_error err;
             v8_value res;
@@ -74,7 +60,7 @@ SECTION("Two threads")
         });
 
     std::thread t3(
-        [vm3, code, &res3]()
+        [vm3 = this->vm3, code, &res3]()
         {
             v8_error err;
             v8_value res;
@@ -94,7 +80,7 @@ SECTION("Two threads")
         });
 
     std::thread t4(
-        [vm4, code, &res4]()
+        [vm4 = this->vm4, code, &res4]()
         {
             v8_error err;
             v8_value res;
@@ -118,27 +104,8 @@ SECTION("Two threads")
     t3.join();
     t4.join();
 
-    EXPECT(res1 == 4);
-    EXPECT(res2 == 4);
-    EXPECT(res3 == 4);
-    EXPECT(res4 == 4);
-}
-
-v8_delete_isolate(vm1);
-v8_delete_isolate(vm2);
-v8_delete_isolate(vm3);
-v8_delete_isolate(vm4);
-}
-}
-};
-
-int main(int argc, char* argv[])
-{
-    v8_instance* v8 = v8_new_instance(argv[0]);
-
-    const int result = lest::run(specification, argc, argv);
-
-    v8_delete_instance(v8);
-
-    return result;
+    EXPECT_EQ(res1, 4);
+    EXPECT_EQ(res2, 4);
+    EXPECT_EQ(res3, 4);
+    EXPECT_EQ(res4, 4);
 }

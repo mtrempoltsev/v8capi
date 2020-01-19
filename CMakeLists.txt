@@ -41,6 +41,10 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     ${CMAKE_THREAD_LIBS_INIT}
     )
 
+add_subdirectory (thirdparty/googletest/googletest)
+
+include_directories (thirdparty/googletest/googletest/include)
+
 enable_testing ()
 
 configure_file (./tests/data/good_script.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
@@ -49,25 +53,27 @@ configure_file (./tests/data/syntax_error.js ${CMAKE_CURRENT_BINARY_DIR} COPYONL
 configure_file (./tests/data/sum.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/throw.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
-macro (register_test test_name)
-    set (TEST_NAME test_${test_name})
+set (TEST_NAME test_${CMAKE_PROJECT_NAME})
 
-    add_executable (${TEST_NAME}
-        ${HEADERS}
-        tests/utils.h tests/utils.cpp
-        tests/${TEST_NAME}.cpp
-        )
+add_executable (${TEST_NAME}
+    ${HEADERS}
 
-    target_link_libraries (${TEST_NAME}
-        ${CMAKE_PROJECT_NAME}
-        v8_monolith
-        ${CMAKE_THREAD_LIBS_INIT}
-        )
+    tests/isolate_fixture.h tests/isolate_fixture.cpp
+    tests/utils.h tests/utils.cpp
 
-    add_test (${TEST_NAME} ${TEST_NAME})
-endmacro ()
+    tests/main.cpp
 
-register_test (common)
-register_test (functions)
-register_test (multiisolates)
-register_test (values)
+    tests/test_common.cpp
+    tests/test_functions.cpp
+    tests/test_multiisolates.cpp
+    tests/test_values.cpp
+    )
+
+target_link_libraries (${TEST_NAME}
+    ${CMAKE_PROJECT_NAME}
+    v8_monolith
+    ${CMAKE_THREAD_LIBS_INIT}
+    gtest
+    )
+
+add_test (${TEST_NAME} ${TEST_NAME})

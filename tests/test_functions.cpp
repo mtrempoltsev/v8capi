@@ -1,29 +1,19 @@
-﻿#include <thread>
-
-#include "lest.hpp"
+﻿#include <gtest/gtest.h>
 
 #include "utils.h"
 
 #include "../include/v8capi.h"
 
-const lest::test specification[] =
-{
-CASE("Test multi isolates")
-{
-SETUP("With one isolate")
-{
-v8_isolate* vm = v8_new_isolate();
+#include "isolate_fixture.h"
 
-EXPECT(vm != nullptr);
-
-SECTION("Sum")
+TEST_F(IsolateFixture, SimpleFunction)
 {
     v8_error err;
 
     v8_script* script =
         v8_compile_script(vm, read_file("sum.js").c_str(), "my.js", &err);
 
-    EXPECT(script != nullptr);
+    ASSERT_NE(script, nullptr);
 
     v8_value res;
 
@@ -31,11 +21,11 @@ SECTION("Sum")
 
     v8_delete_value(&res);
 
-    EXPECT(ok == true);
+    ASSERT_TRUE(ok);
 
     v8_callable* sum = v8_get_function(script, "sum");
 
-    EXPECT(sum != nullptr);
+    ASSERT_NE(sum, nullptr);
 
     v8_value args[] =
     {
@@ -45,35 +35,19 @@ SECTION("Sum")
 
     ok = v8_call_function(sum, 2, args, &res, &err);
 
-    EXPECT(ok == true);
+    ASSERT_TRUE(ok);
 
-    EXPECT(v8_is_int64(res) == true);
-    EXPECT(v8_to_int64(res) == 4);
+    EXPECT_EQ(v8_is_int64(res), true);
+    EXPECT_EQ(v8_to_int64(res), 4);
 
-    EXPECT(err.line_number == 0);
-    EXPECT(err.location == nullptr);
-    EXPECT(err.message == nullptr);
-    EXPECT(err.stack_trace == nullptr);
-    EXPECT(err.wavy_underline == nullptr);
+    EXPECT_EQ(err.line_number, 0);
+    EXPECT_EQ(err.location, nullptr);
+    EXPECT_EQ(err.message, nullptr);
+    EXPECT_EQ(err.stack_trace, nullptr);
+    EXPECT_EQ(err.wavy_underline, nullptr);
 
     v8_delete_value(&res);
     v8_delete_error(&err);
     v8_delete_function(sum);
     v8_delete_script(script);
-}
-
-v8_delete_isolate(vm);
-}
-}
-};
-
-int main(int argc, char* argv[])
-{
-    v8_instance* v8 = v8_new_instance(argv[0]);
-
-    const int result = lest::run(specification, argc, argv);
-
-    v8_delete_instance(v8);
-
-    return result;
 }

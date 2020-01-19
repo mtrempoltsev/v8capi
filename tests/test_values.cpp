@@ -1,183 +1,179 @@
 ﻿#include <string>
 #include <limits>
 
-#include "lest.hpp"
+#include <gtest/gtest.h>
 
 #include "../include/v8capi_values.h"
 
-const lest::test specification[] =
-{
-CASE("Test values")
-{
-SETUP("Empty setup")
-{
-SECTION("Test undefined")
+#include "isolate_fixture.h"
+
+TEST_F(IsolateFixture, UndefinedValue)
 {
     v8_value val = v8_new_undefined();
 
-    EXPECT(v8_get_value_type(val) == v8_undefined);
+    EXPECT_EQ(v8_get_value_type(val), v8_undefined);
 
-    EXPECT(v8_is_undefined(val) == true);
-    EXPECT(v8_is_boolean(val) == false);
-    EXPECT(v8_is_null(val) == false);
-    EXPECT(v8_is_number(val) == false);
-    EXPECT(v8_is_double(val) == false);
-    EXPECT(v8_is_int64(val) == false);
-    EXPECT(v8_is_string(val) == false);
-    EXPECT(v8_is_array(val) == false);
-    EXPECT(v8_is_set(val) == false);
-    EXPECT(v8_is_map(val) == false);
+    EXPECT_EQ(v8_is_undefined(val), true);
+    EXPECT_EQ(v8_is_boolean(val), false);
+    EXPECT_EQ(v8_is_null(val), false);
+    EXPECT_EQ(v8_is_number(val), false);
+    EXPECT_EQ(v8_is_double(val), false);
+    EXPECT_EQ(v8_is_int64(val), false);
+    EXPECT_EQ(v8_is_string(val), false);
+    EXPECT_EQ(v8_is_array(val), false);
+    EXPECT_EQ(v8_is_set(val), false);
+    EXPECT_EQ(v8_is_map(val), false);
 
     v8_delete_value(&val);
 
-    EXPECT(v8_get_value_type(val) == v8_undefined);
-    EXPECT(v8_is_undefined(val));
+    EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+    EXPECT_TRUE(v8_is_undefined(val));
 }
 
-SECTION("Test boolean")
+TEST_F(IsolateFixture, BooleanValue)
 {
     {
         v8_value val = v8_new_boolean(true);
 
-        EXPECT(v8_get_value_type(val) == v8_boolean);
+        EXPECT_EQ(v8_get_value_type(val), v8_boolean);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == true);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == false);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), true);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_bool(val) == true);
+        EXPECT_EQ(v8_to_bool(val), true);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
     {
         v8_value val = v8_new_boolean(false);
 
-        EXPECT(v8_to_bool(val) == false);
+        EXPECT_EQ(v8_to_bool(val), false);
 
         v8_delete_value(&val);
     }
 }
 
-SECTION("Test null")
+TEST_F(IsolateFixture, NullValue)
 {
     v8_value val = v8_new_null();
 
-    EXPECT(v8_get_value_type(val) == v8_null);
+    EXPECT_EQ(v8_get_value_type(val), v8_null);
 
-    EXPECT(v8_is_undefined(val) == false);
-    EXPECT(v8_is_boolean(val) == false);
-    EXPECT(v8_is_null(val) == true);
-    EXPECT(v8_is_number(val) == false);
-    EXPECT(v8_is_double(val) == false);
-    EXPECT(v8_is_int64(val) == false);
-    EXPECT(v8_is_string(val) == false);
-    EXPECT(v8_is_array(val) == false);
-    EXPECT(v8_is_set(val) == false);
-    EXPECT(v8_is_map(val) == false);
+    EXPECT_EQ(v8_is_undefined(val), false);
+    EXPECT_EQ(v8_is_boolean(val), false);
+    EXPECT_EQ(v8_is_null(val), true);
+    EXPECT_EQ(v8_is_number(val), false);
+    EXPECT_EQ(v8_is_double(val), false);
+    EXPECT_EQ(v8_is_int64(val), false);
+    EXPECT_EQ(v8_is_string(val), false);
+    EXPECT_EQ(v8_is_array(val), false);
+    EXPECT_EQ(v8_is_set(val), false);
+    EXPECT_EQ(v8_is_map(val), false);
 
     v8_delete_value(&val);
 
-    EXPECT(v8_get_value_type(val) == v8_undefined);
-    EXPECT(v8_is_undefined(val));
+    EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+    EXPECT_TRUE(v8_is_undefined(val));
 }
 
-SECTION("Test number")
+TEST_F(IsolateFixture, NumberValue)
 {
     {
         v8_value val = v8_new_number(1.5);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == true);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), true);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_double(val) == 1.5);
+        EXPECT_EQ(v8_to_double(val), 1.5);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
     {
         v8_value val = v8_new_integer(0);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == true);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_int64(val) == 0);
+        EXPECT_EQ(v8_to_int64(val), 0);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
     {
         v8_value val = v8_new_integer(1);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == true);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_int64(val) == 1);
+        EXPECT_EQ(v8_to_int64(val), 1);
     }
 
     {
         v8_value val = v8_new_integer(-1);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == true);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_int64(val) == -1);
+        EXPECT_EQ(v8_to_int64(val), -1);
     }
 
     {
@@ -185,20 +181,20 @@ SECTION("Test number")
 
         v8_value val = v8_new_integer(x);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == true);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_int64(val) == x);
+        EXPECT_EQ(v8_to_int64(val), x);
     }
 
     {
@@ -206,85 +202,85 @@ SECTION("Test number")
 
         v8_value val = v8_new_integer(x);
 
-        EXPECT(v8_get_value_type(val) == v8_number);
+        EXPECT_EQ(v8_get_value_type(val), v8_number);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == true);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == true);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), true);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
-        EXPECT(v8_to_int64(val) == x);
+        EXPECT_EQ(v8_to_int64(val), x);
     }
 }
 
-SECTION("Test to_double")
+TEST_F(IsolateFixture, to_double)
 {
     {
         v8_value val = v8_new_number(1.5);
-        EXPECT(v8_to_double(val) == 1.5);
+        EXPECT_EQ(v8_to_double(val), 1.5);
     }
 
     {
         v8_value val = v8_new_integer(0);
-        EXPECT(static_cast<uint64_t>(v8_to_double(val)) == 0u);
+        EXPECT_EQ(static_cast<uint64_t>(v8_to_double(val)), 0u);
     }
 
     {
         v8_value val = v8_new_integer(1);
-        EXPECT(static_cast<uint64_t>(v8_to_double(val)) == 1u);
+        EXPECT_EQ(static_cast<uint64_t>(v8_to_double(val)), 1u);
     }
 
     {
         v8_value val = v8_new_integer(-1);
-        EXPECT(static_cast<int32_t>(v8_to_double(val)) == -1);
+        EXPECT_EQ(static_cast<int32_t>(v8_to_double(val)), -1);
     }
 
     {
         const auto x = static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1;
         v8_value val = v8_new_integer(x);
-        EXPECT(static_cast<int64_t>(v8_to_double(val)) == x);
+        EXPECT_EQ(static_cast<int64_t>(v8_to_double(val)), x);
     }
 
     {
         const auto x = static_cast<int64_t>(std::numeric_limits<int32_t>::min()) - 1;
         v8_value val = v8_new_integer(x);
-        EXPECT(static_cast<int64_t>(v8_to_double(val)) == x);
+        EXPECT_EQ(static_cast<int64_t>(v8_to_double(val)), x);
     }
 }
 
-SECTION("Test string")
+TEST_F(IsolateFixture, StringValue)
 {
     {
         v8_value val = v8_new_string("", 0);
 
-        EXPECT(v8_get_value_type(val) == v8_string);
+        EXPECT_EQ(v8_get_value_type(val), v8_string);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == false);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == true);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), true);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
         v8_string_value str = v8_to_string(&val);
 
-        EXPECT(str.size == 0);
-        EXPECT(*str.data == '\0');
+        EXPECT_EQ(str.size, 0);
+        EXPECT_EQ(*str.data, '\0');
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
     {
@@ -292,18 +288,18 @@ SECTION("Test string")
 
         v8_value val = v8_new_string(x.c_str(), static_cast<int32_t>(x.length()));
 
-        EXPECT(v8_get_value_type(val) == v8_string);
-        EXPECT(v8_is_string(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_string);
+        EXPECT_TRUE(v8_is_string(val));
 
         v8_string_value str = v8_to_string(&val);
 
-        EXPECT(static_cast<size_t>(str.size) == x.length());
-        EXPECT(str.data == x);
+        EXPECT_EQ(static_cast<size_t>(str.size), x.length());
+        EXPECT_EQ(str.data, x);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
     {
@@ -311,18 +307,18 @@ SECTION("Test string")
 
         v8_value val = v8_new_string(x.c_str(), static_cast<int32_t>(x.length()));
 
-        EXPECT(v8_get_value_type(val) == v8_string);
-        EXPECT(v8_is_string(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_string);
+        EXPECT_TRUE(v8_is_string(val));
 
         v8_string_value str = v8_to_string(&val);
 
-        EXPECT(static_cast<size_t>(str.size) == x.length());
-        EXPECT(str.data == x);
+        EXPECT_EQ(static_cast<size_t>(str.size), x.length());
+        EXPECT_EQ(str.data, x);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
 #ifdef NDEBUG
@@ -331,47 +327,47 @@ SECTION("Test string")
 
         v8_string_value str = v8_to_string(&val);
 
-        EXPECT(str.size == 0);
-        EXPECT(str.data == nullptr);
+        EXPECT_EQ(str.size, 0);
+        EXPECT_EQ(str.data, nullptr);
     }
 
     {
         v8_value val = v8_new_string("", -1);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val) == true);
-        EXPECT(v8_is_string(val) == false);
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_EQ(v8_is_undefined(val), true);
+        EXPECT_EQ(v8_is_string(val), false);
     }
 #endif
 }
 
-SECTION("Test array")
+TEST_F(IsolateFixture, ArrayValue)
 {
     {
         v8_value val = v8_new_array(1);
 
-        EXPECT(v8_get_value_type(val) == v8_array);
+        EXPECT_EQ(v8_get_value_type(val), v8_array);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == false);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == true);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), true);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
 
         v8_array_value arr = v8_to_array(val);
 
-        EXPECT(arr.size == 1);
-        EXPECT(arr.data != nullptr);
+        EXPECT_EQ(arr.size, 1);
+        EXPECT_NE(arr.data, nullptr);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
 #ifdef NDEBUG
@@ -380,47 +376,47 @@ SECTION("Test array")
 
         v8_array_value arr = v8_to_array(val);
 
-        EXPECT(arr.size == 0);
-        EXPECT(arr.data == nullptr);
+        EXPECT_EQ(arr.size, 0);
+        EXPECT_EQ(arr.data, nullptr);
     }
 
     {
         v8_value val = v8_new_array(0);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val) == true);
-        EXPECT(v8_is_array(val) == false);
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_EQ(v8_is_undefined(val), true);
+        EXPECT_EQ(v8_is_array(val), false);
     }
 #endif
 }
 
-SECTION("Test set")
+TEST_F(IsolateFixture, SetValue)
 {
     {
         v8_value val = v8_new_set(1);
 
-        EXPECT(v8_get_value_type(val) == v8_set);
+        EXPECT_EQ(v8_get_value_type(val), v8_set);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == false);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == true);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), true);
+        EXPECT_EQ(v8_is_map(val), false);
 
         v8_set_value arr = v8_to_set(val);
 
-        EXPECT(arr.size == 1);
-        EXPECT(arr.data != nullptr);
+        EXPECT_EQ(arr.size, 1);
+        EXPECT_NE(arr.data, nullptr);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
 #ifdef NDEBUG
@@ -429,47 +425,47 @@ SECTION("Test set")
 
         v8_set_value arr = v8_to_set(val);
 
-        EXPECT(arr.size == 0);
-        EXPECT(arr.data == nullptr);
+        EXPECT_EQ(arr.size, 0);
+        EXPECT_EQ(arr.data, nullptr);
     }
 
     {
         v8_value val = v8_new_array(0);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val) == true);
-        EXPECT(v8_is_set(val) == false);
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_EQ(v8_is_undefined(val), true);
+        EXPECT_EQ(v8_is_set(val), false);
     }
 #endif
 }
 
-SECTION("Test map")
+TEST_F(IsolateFixture, MapValue)
 {
     {
         v8_value val = v8_new_map(1);
 
-        EXPECT(v8_get_value_type(val) == v8_map);
+        EXPECT_EQ(v8_get_value_type(val), v8_map);
 
-        EXPECT(v8_is_undefined(val) == false);
-        EXPECT(v8_is_boolean(val) == false);
-        EXPECT(v8_is_null(val) == false);
-        EXPECT(v8_is_number(val) == false);
-        EXPECT(v8_is_double(val) == false);
-        EXPECT(v8_is_int64(val) == false);
-        EXPECT(v8_is_string(val) == false);
-        EXPECT(v8_is_array(val) == false);
-        EXPECT(v8_is_set(val) == false);
-        EXPECT(v8_is_map(val) == true);
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), true);
 
         v8_map_value arr = v8_to_map(val);
 
-        EXPECT(arr.size == 1);
-        EXPECT(arr.data != nullptr);
+        EXPECT_EQ(arr.size, 1);
+        EXPECT_NE(arr.data, nullptr);
 
         v8_delete_value(&val);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val));
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
     }
 
 #ifdef NDEBUG
@@ -478,25 +474,16 @@ SECTION("Test map")
 
         v8_map_value arr = v8_to_map(val);
 
-        EXPECT(arr.size == 0);
-        EXPECT(arr.data == nullptr);
+        EXPECT_EQ(arr.size, 0);
+        EXPECT_EQ(arr.data, nullptr);
     }
 
     {
         v8_value val = v8_new_map(0);
 
-        EXPECT(v8_get_value_type(val) == v8_undefined);
-        EXPECT(v8_is_undefined(val) == true);
-        EXPECT(v8_is_map(val) == false);
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_EQ(v8_is_undefined(val), true);
+        EXPECT_EQ(v8_is_map(val), false);
     }
 #endif
-}
-}
-}
-};
-
-int main(int argc, char* argv[])
-{
-    const int result = lest::run(specification, argc, argv);
-    return result;
 }
