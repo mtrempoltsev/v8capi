@@ -37,8 +37,8 @@ TEST_F(IsolateFixture, SimpleFunction)
 
     ASSERT_TRUE(ok);
 
-    EXPECT_EQ(v8_is_int64(res), true);
-    EXPECT_EQ(v8_to_int64(res), 4);
+    EXPECT_EQ(v8_is_integer(res), true);
+    EXPECT_EQ(v8_to_int32(res), 4);
 
     EXPECT_EQ(err.line_number, 0);
     EXPECT_EQ(err.location, nullptr);

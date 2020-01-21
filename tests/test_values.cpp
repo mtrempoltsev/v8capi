@@ -1,4 +1,5 @@
-﻿#include <string>
+﻿#include <cmath>
+#include <string>
 #include <limits>
 
 #include <gtest/gtest.h>
@@ -18,8 +19,9 @@ TEST_F(IsolateFixture, UndefinedValue)
     EXPECT_EQ(v8_is_null(val), false);
     EXPECT_EQ(v8_is_number(val), false);
     EXPECT_EQ(v8_is_double(val), false);
-    EXPECT_EQ(v8_is_int64(val), false);
+    EXPECT_EQ(v8_is_integer(val), false);
     EXPECT_EQ(v8_is_string(val), false);
+    EXPECT_EQ(v8_is_object(val), false);
     EXPECT_EQ(v8_is_array(val), false);
     EXPECT_EQ(v8_is_set(val), false);
     EXPECT_EQ(v8_is_map(val), false);
@@ -42,8 +44,9 @@ TEST_F(IsolateFixture, BooleanValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), false);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -76,8 +79,9 @@ TEST_F(IsolateFixture, NullValue)
     EXPECT_EQ(v8_is_null(val), true);
     EXPECT_EQ(v8_is_number(val), false);
     EXPECT_EQ(v8_is_double(val), false);
-    EXPECT_EQ(v8_is_int64(val), false);
+    EXPECT_EQ(v8_is_integer(val), false);
     EXPECT_EQ(v8_is_string(val), false);
+    EXPECT_EQ(v8_is_object(val), false);
     EXPECT_EQ(v8_is_array(val), false);
     EXPECT_EQ(v8_is_set(val), false);
     EXPECT_EQ(v8_is_map(val), false);
@@ -100,8 +104,9 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), true);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -124,8 +129,9 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_integer(val), true);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -148,8 +154,9 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_integer(val), true);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -167,8 +174,9 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_integer(val), true);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -188,8 +196,9 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_integer(val), true);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -209,14 +218,25 @@ TEST_F(IsolateFixture, NumberValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), true);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), true);
+        EXPECT_EQ(v8_is_integer(val), true);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
 
         EXPECT_EQ(v8_to_int64(val), x);
     }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        int64_t res = v8_to_int64(val);
+
+        EXPECT_EQ(res, 0);
+    }
+#endif
 }
 
 TEST_F(IsolateFixture, to_double)
@@ -252,6 +272,16 @@ TEST_F(IsolateFixture, to_double)
         v8_value val = v8_new_integer(x);
         EXPECT_EQ(static_cast<int64_t>(v8_to_double(val)), x);
     }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        double nan = v8_to_double(val);
+
+        EXPECT_TRUE(std::isnan(nan));
+    }
+#endif
 }
 
 TEST_F(IsolateFixture, StringValue)
@@ -266,8 +296,9 @@ TEST_F(IsolateFixture, StringValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), false);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), true);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -341,6 +372,56 @@ TEST_F(IsolateFixture, StringValue)
 #endif
 }
 
+TEST_F(IsolateFixture, ObjectValue)
+{
+    {
+        v8_value val = v8_new_object(1);
+
+        EXPECT_EQ(v8_get_value_type(val), v8_object);
+
+        EXPECT_EQ(v8_is_undefined(val), false);
+        EXPECT_EQ(v8_is_boolean(val), false);
+        EXPECT_EQ(v8_is_null(val), false);
+        EXPECT_EQ(v8_is_number(val), false);
+        EXPECT_EQ(v8_is_double(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
+        EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), true);
+        EXPECT_EQ(v8_is_array(val), false);
+        EXPECT_EQ(v8_is_set(val), false);
+        EXPECT_EQ(v8_is_map(val), false);
+
+        v8_object_value obj = v8_to_object(val);
+
+        EXPECT_EQ(obj.size, 1);
+        EXPECT_NE(obj.data, nullptr);
+
+        v8_delete_value(&val);
+
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_TRUE(v8_is_undefined(val));
+    }
+
+#ifdef NDEBUG
+    {
+        v8_value val = v8_new_undefined();
+
+        v8_object_value obj = v8_to_object(val);
+
+        EXPECT_EQ(obj.size, 0);
+        EXPECT_EQ(obj.data, nullptr);
+    }
+
+    {
+        v8_value val = v8_new_object(-1);
+
+        EXPECT_EQ(v8_get_value_type(val), v8_undefined);
+        EXPECT_EQ(v8_is_undefined(val), true);
+        EXPECT_EQ(v8_is_object(val), false);
+    }
+#endif
+}
+
 TEST_F(IsolateFixture, ArrayValue)
 {
     {
@@ -353,8 +434,9 @@ TEST_F(IsolateFixture, ArrayValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), false);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), true);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), false);
@@ -381,7 +463,7 @@ TEST_F(IsolateFixture, ArrayValue)
     }
 
     {
-        v8_value val = v8_new_array(0);
+        v8_value val = v8_new_array(-1);
 
         EXPECT_EQ(v8_get_value_type(val), v8_undefined);
         EXPECT_EQ(v8_is_undefined(val), true);
@@ -402,16 +484,17 @@ TEST_F(IsolateFixture, SetValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), false);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), true);
         EXPECT_EQ(v8_is_map(val), false);
 
-        v8_set_value arr = v8_to_set(val);
+        v8_set_value set = v8_to_set(val);
 
-        EXPECT_EQ(arr.size, 1);
-        EXPECT_NE(arr.data, nullptr);
+        EXPECT_EQ(set.size, 1);
+        EXPECT_NE(set.data, nullptr);
 
         v8_delete_value(&val);
 
@@ -423,14 +506,14 @@ TEST_F(IsolateFixture, SetValue)
     {
         v8_value val = v8_new_undefined();
 
-        v8_set_value arr = v8_to_set(val);
+        v8_set_value set = v8_to_set(val);
 
-        EXPECT_EQ(arr.size, 0);
-        EXPECT_EQ(arr.data, nullptr);
+        EXPECT_EQ(set.size, 0);
+        EXPECT_EQ(set.data, nullptr);
     }
 
     {
-        v8_value val = v8_new_array(0);
+        v8_value val = v8_new_array(-1);
 
         EXPECT_EQ(v8_get_value_type(val), v8_undefined);
         EXPECT_EQ(v8_is_undefined(val), true);
@@ -451,16 +534,17 @@ TEST_F(IsolateFixture, MapValue)
         EXPECT_EQ(v8_is_null(val), false);
         EXPECT_EQ(v8_is_number(val), false);
         EXPECT_EQ(v8_is_double(val), false);
-        EXPECT_EQ(v8_is_int64(val), false);
+        EXPECT_EQ(v8_is_integer(val), false);
         EXPECT_EQ(v8_is_string(val), false);
+        EXPECT_EQ(v8_is_object(val), false);
         EXPECT_EQ(v8_is_array(val), false);
         EXPECT_EQ(v8_is_set(val), false);
         EXPECT_EQ(v8_is_map(val), true);
 
-        v8_map_value arr = v8_to_map(val);
+        v8_map_value map = v8_to_map(val);
 
-        EXPECT_EQ(arr.size, 1);
-        EXPECT_NE(arr.data, nullptr);
+        EXPECT_EQ(map.size, 1);
+        EXPECT_NE(map.data, nullptr);
 
         v8_delete_value(&val);
 
@@ -472,14 +556,14 @@ TEST_F(IsolateFixture, MapValue)
     {
         v8_value val = v8_new_undefined();
 
-        v8_map_value arr = v8_to_map(val);
+        v8_map_value map = v8_to_map(val);
 
-        EXPECT_EQ(arr.size, 0);
-        EXPECT_EQ(arr.data, nullptr);
+        EXPECT_EQ(map.size, 0);
+        EXPECT_EQ(map.data, nullptr);
     }
 
     {
-        v8_value val = v8_new_map(0);
+        v8_value val = v8_new_map(-1);
 
         EXPECT_EQ(v8_get_value_type(val), v8_undefined);
         EXPECT_EQ(v8_is_undefined(val), true);

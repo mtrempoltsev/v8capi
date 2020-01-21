@@ -167,64 +167,47 @@ v8_value v8_new_string(const char* value, int32_t length)
     return to_value(val_impl);
 }
 
-v8_value v8_new_array(int32_t size)
+template <class T>
+v8_value make_sequense(int32_t size, js_types type)
 {
-    assert(size > 0);
+    assert(size >= 0);
 
-    if (size <= 0)
+    if (size < 0)
     {
         return v8_new_undefined();
     }
 
     v8_value_impl val_impl =
     {
-        new v8_value[size],
-        js_types::array,
+        size == 0
+            ? nullptr
+            : new T[size],
+        type,
         type_specifiers::not_special,
         size
     };
 
     return to_value(val_impl);
+}
+
+v8_value v8_new_object(int32_t size)
+{
+    return make_sequense<v8_pair_value>(size, js_types::object);
+}
+
+v8_value v8_new_array(int32_t size)
+{
+    return make_sequense<v8_value>(size, js_types::array);
 }
 
 v8_value v8_new_set(int32_t size)
 {
-    assert(size > 0);
-
-    if (size <= 0)
-    {
-        return v8_new_undefined();
-    }
-
-    v8_value_impl val_impl =
-    {
-        new v8_value[size],
-        js_types::set,
-        type_specifiers::not_special,
-        size
-    };
-
-    return to_value(val_impl);
+    return make_sequense<v8_value>(size, js_types::set);
 }
 
 v8_value v8_new_map(int32_t size)
 {
-    assert(size > 0);
-
-    if (size <= 0)
-    {
-        return v8_new_undefined();
-    }
-
-    v8_value_impl val_impl =
-    {
-        new v8_pair_value[size],
-        js_types::map,
-        type_specifiers::not_special,
-        size
-    };
-
-    return to_value(val_impl);
+    return make_sequense<v8_pair_value>(size, js_types::map);
 }
 
 bool v8_is_undefined(v8_value value)
@@ -257,7 +240,7 @@ bool v8_is_double(v8_value value)
     return val_impl.specifier == type_specifiers::number;
 }
 
-bool v8_is_int64(v8_value value)
+bool v8_is_integer(v8_value value)
 {
     const auto val_impl = to_value_impl(value);
     return val_impl.type == js_types::number
@@ -268,6 +251,12 @@ bool v8_is_string(v8_value value)
 {
     const auto val_impl = to_value_impl(value);
     return val_impl.type == js_types::string;
+}
+
+bool v8_is_object(v8_value value)
+{
+    const auto val_impl = to_value_impl(value);
+    return val_impl.type == js_types::object;
 }
 
 bool v8_is_array(v8_value value)
@@ -299,22 +288,27 @@ bool v8_to_bool(v8_value value)
     return value.data;
 }
 
+double get_double(void* data)
+{
+    double val;
+    std::memcpy(&val, &data, sizeof(double));
+    return val;
+}
+
 double v8_to_double(v8_value value)
 {
     const auto val_impl = to_value_impl(value);
 
     assert(val_impl.type == js_types::number);
 
-    if (val_impl.type == js_types::number)
+    if (val_impl.type != js_types::number)
     {
-        std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
     if (val_impl.specifier == type_specifiers::number)
     {
-        double val;
-        std::memcpy(&val, &val_impl.data, sizeof(double));
-        return val;
+        return get_double(val_impl.data);
     }
 
     return static_cast<double>(reinterpret_cast<int64_t>(val_impl.data));
@@ -332,7 +326,21 @@ uint32_t v8_to_uint32(v8_value value)
 
 int64_t v8_to_int64(v8_value value)
 {
-    return reinterpret_cast<int64_t>(value.data);
+    const auto val_impl = to_value_impl(value);
+
+    assert(val_impl.type == js_types::number);
+
+    if (val_impl.type != js_types::number)
+    {
+        return 0;
+    }
+
+    if (val_impl.specifier != type_specifiers::number)
+    {
+        return reinterpret_cast<int64_t>(value.data);
+    }
+
+    return static_cast<int64_t>(get_double(val_impl.data));
 }
 
 v8_string_value v8_to_string(v8_value* value)
@@ -370,13 +378,14 @@ v8_string_value v8_to_string(v8_value* value)
     };
 }
 
-v8_array_value v8_to_array(struct v8_value value)
+template <class T>
+T to_sequense(v8_value value, js_types type)
 {
     const auto val_impl = to_value_impl(value);
 
-    assert(val_impl.type == js_types::array);
+    assert(val_impl.type == type);
 
-    if (val_impl.type != js_types::array)
+    if (val_impl.type != type)
     {
         return
         {
@@ -388,52 +397,28 @@ v8_array_value v8_to_array(struct v8_value value)
     return
     {
         val_impl.size,
-        static_cast<v8_value*>(val_impl.data)
+        static_cast<decltype(T().data)>(val_impl.data)
     };
 }
 
-v8_set_value v8_to_set(struct v8_value value)
+v8_object_value v8_to_object(v8_value value)
 {
-    const auto val_impl = to_value_impl(value);
-
-    assert(val_impl.type == js_types::set);
-
-    if (val_impl.type != js_types::set)
-    {
-        return
-        {
-            0,
-            nullptr
-        };
-    }
-
-    return
-    {
-        val_impl.size,
-        static_cast<v8_value*>(val_impl.data)
-    };
+    return to_sequense<v8_object_value>(value, js_types::object);
 }
 
-v8_map_value v8_to_map(struct v8_value value)
+v8_array_value v8_to_array(v8_value value)
 {
-    const auto val_impl = to_value_impl(value);
+    return to_sequense<v8_array_value>(value, js_types::array);
+}
 
-    assert(val_impl.type == js_types::map);
+v8_set_value v8_to_set(v8_value value)
+{
+    return to_sequense<v8_set_value>(value, js_types::set);
+}
 
-    if (val_impl.type != js_types::map)
-    {
-        return
-        {
-            0,
-            nullptr
-        };
-    }
-
-    return
-    {
-        val_impl.size,
-        static_cast<v8_pair_value*>(val_impl.data)
-    };
+v8_map_value v8_to_map(v8_value value)
+{
+    return to_sequense<v8_map_value>(value, js_types::map);
 }
 
 void set_undefined(v8_value* value)
@@ -475,9 +460,17 @@ void v8_delete_value(v8_value* value)
         assert(!"not implemented");
         return;
     case js_types::object:
-        assert(!"not implemented");
+        for (int i = 0; i < val_impl.size; ++i)
+        {
+            auto pair = &static_cast<v8_pair_value*>(val_impl.data)[i];
+            v8_delete_value(&pair->first);
+            v8_delete_value(&pair->second);
+        }
+        delete[] static_cast<v8_pair_value*>(val_impl.data);
+        set_undefined(value);
         return;
     case js_types::array:
+        // like set
     case js_types::set:
         for (int i = 0; i < val_impl.size; ++i)
         {
@@ -516,16 +509,16 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
 
     if (value->IsNumber())
     {
-        int64_t int_res;
-        if (value->IntegerValue(context).To(&int_res))
+        if (value->IsUint32() || value->IsInt32())
         {
-            return v8_new_integer(int_res);
+            v8::Integer* integer = v8::Integer::Cast(*value);
+            return v8_new_integer(integer->Value());
         }
 
-        double res;
-        if (value->NumberValue(context).To(&res))
+        double number;
+        if (value->NumberValue(context).To(&number))
         {
-            return v8_new_number(res);
+            return v8_new_number(number);
         }
 
         assert(!"invalid conversion");
@@ -557,6 +550,7 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
 
             if (!arr->Get(context, i).ToLocal(&elem))
             {
+                v8_delete_value(&res);
                 assert(!"invalid conversion");
                 return v8_new_undefined();
             }
@@ -583,6 +577,7 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
 
             if (!arr->Get(context, i).ToLocal(&elem))
             {
+                v8_delete_value(&res);
                 assert(!"invalid conversion");
                 return v8_new_undefined();
             }
@@ -608,6 +603,7 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
             v8::Local<v8::Value> k;
             if (!arr->Get(context, i).ToLocal(&k))
             {
+                v8_delete_value(&res);
                 assert(!"invalid conversion");
                 return v8_new_undefined();
             }
@@ -615,6 +611,48 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
             v8::Local<v8::Value> v;
             if (!arr->Get(context, i).ToLocal(&v))
             {
+                v8_delete_value(&res);
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            data[i].first = from_v8_value(context, k);
+            data[i].second = from_v8_value(context, v);
+        }
+
+        return res;
+    }
+
+    if (value->IsObject())
+    {
+        v8::Object* obj = v8::Object::Cast(*value);
+
+        v8::Local<v8::Array> names;
+        if (!obj->GetOwnPropertyNames(context).ToLocal(&names))
+        {
+            assert(!"invalid conversion");
+            return v8_new_undefined();
+        }
+
+        const auto length = names->Length();
+
+        v8_value res = v8_new_object(length);
+        auto data = static_cast<v8_pair_value*>(res.data);
+
+        for (uint32_t i = 0; i < length; ++i)
+        {
+            v8::Local<v8::Value> k;
+            if (!names->Get(context, i).ToLocal(&k))
+            {
+                v8_delete_value(&res);
+                assert(!"invalid conversion");
+                return v8_new_undefined();
+            }
+
+            v8::Local<v8::Value> v;
+            if (!obj->Get(context, k).ToLocal(&v))
+            {
+                v8_delete_value(&res);
                 assert(!"invalid conversion");
                 return v8_new_undefined();
             }

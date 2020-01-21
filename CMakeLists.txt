@@ -49,6 +49,7 @@ enable_testing ()
 
 configure_file (./tests/data/good_script.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/infinite_loop.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file (./tests/data/primitives.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/syntax_error.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/sum.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/throw.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
@@ -63,6 +64,7 @@ add_executable (${TEST_NAME}
 
     tests/main.cpp
 
+    tests/test_conversions.cpp
     tests/test_common.cpp
     tests/test_functions.cpp
     tests/test_multiisolates.cpp

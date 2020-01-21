@@ -60,12 +60,19 @@ struct v8_map_value
     struct v8_pair_value* data;
 };
 
+struct v8_object_value
+{
+    int32_t size;
+    struct v8_pair_value* data;
+};
+
 struct v8_value v8_new_undefined();
 struct v8_value v8_new_boolean(bool value);
 struct v8_value v8_new_null();
 struct v8_value v8_new_number(double value);
 struct v8_value v8_new_integer(int64_t value);
 struct v8_value v8_new_string(const char* value, int32_t length);
+struct v8_value v8_new_object(int32_t size);
 struct v8_value v8_new_array(int32_t size);
 struct v8_value v8_new_set(int32_t size);
 struct v8_value v8_new_map(int32_t size);
@@ -75,8 +82,9 @@ bool v8_is_boolean(struct v8_value value);
 bool v8_is_null(struct v8_value value);
 bool v8_is_number(struct v8_value value);
 bool v8_is_double(struct v8_value value);
-bool v8_is_int64(struct v8_value value);
+bool v8_is_integer(struct v8_value value);
 bool v8_is_string(struct v8_value value);
+bool v8_is_object(struct v8_value value);
 bool v8_is_array(struct v8_value value);
 bool v8_is_set(struct v8_value value);
 bool v8_is_map(struct v8_value value);
@@ -89,6 +97,7 @@ int32_t v8_to_int32(struct v8_value value);
 uint32_t v8_to_uint32(struct v8_value value);
 int64_t v8_to_int64(struct v8_value value);
 struct v8_string_value v8_to_string(struct v8_value* value);
+struct v8_object_value v8_to_object(struct v8_value value);
 struct v8_array_value v8_to_array(struct v8_value value);
 struct v8_set_value v8_to_set(struct v8_value value);
 struct v8_map_value v8_to_map(struct v8_value value);
