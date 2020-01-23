@@ -22,11 +22,11 @@ set (SOURCES
     )
 
 include_directories (
-    ${V8CAPI_LIB_ROOT}/v8/include
+    thirdparty/v8/include
     )
 
 link_directories (
-    ${V8CAPI_LIB_ROOT}/v8/linux.x64
+    thirdparty/v8
     )
 
 add_library (${CMAKE_PROJECT_NAME}
