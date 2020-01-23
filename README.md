@@ -1,5 +1,43 @@
-# v8capi
-### C API for V8 JavaScript engine
+# V8 C API
+
+C API for V8 JavaScript engine
+
+### Supported operating systems
+
+- Linux x64
+- MacOS X
+
+### How to build
+
+#### Build Requirements
+
+- Git to clone this repository
+- A C++17-standard-compliant compiler
+- Ninja build system (https://ninja-build.org/)
+- CMake (https://cmake.org/)
+
+#### Step by step guide
+
+From root of V8 C API repository:
+
+```
+- mkdir build
+- cd build
+- cmake .. -DCMAKE_BUILD_TYPE=Release
+  or if you want to build V8 library (it will take about 20-60 minutes)
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DV8CAPI_BUILD_V8=ON
+- make
+```
+
+After that you can run the tests:
+
+```
+- ctest
+  or
+  ./test_v8capi
+```
+
+### Example
 
 ```C
 struct v8_instance* v8 = v8_new_instance(argv[0]);
