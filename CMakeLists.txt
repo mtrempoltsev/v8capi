@@ -2,6 +2,8 @@
 
 project (v8capi)
 
+set (V8_LIBRARY thirdparty/v8/libv8_monolith.a)
+
 set (CMAKE_CXX_STANDARD 17)
 
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wpedantic -Wconversion")
@@ -33,6 +35,18 @@ add_library (${CMAKE_PROJECT_NAME}
     ${HEADERS}
     ${SOURCES}
     )
+
+if (${V8CAPI_BUILD_V8})
+    add_custom_target (build_v8
+        COMMAND thirdparty/build_v8.sh
+        BYPRODUCTS thirdparty/v8/libv8_monolith.a
+        COMMENT "Building V8"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        VERBATIM
+        )
+
+    add_dependencies (${CMAKE_PROJECT_NAME} build_v8)
+endif ()
 
 find_package (Threads)
 
