@@ -115,3 +115,84 @@ TEST_F(IsolateFixture, ArrayConversion)
     v8_delete_error(&err);
     v8_delete_script(script);
 }
+
+TEST_F(IsolateFixture, SetConversion)
+{
+    v8_error err;
+
+    v8_script* script =
+        v8_compile_script(vm, "new Set([1, 2, 3]);", "my.js", &err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value res;
+
+    const bool ok = v8_run_script(script, &res, &err);
+
+    ASSERT_TRUE(ok);
+
+    ASSERT_TRUE(v8_is_set(res));
+
+    v8_set_value set = v8_to_set(res);
+
+    ASSERT_EQ(set.size, 3);
+
+    EXPECT_TRUE(v8_is_integer(set.data[0]));
+    EXPECT_EQ(v8_to_int32(set.data[0]), 1);
+
+    EXPECT_TRUE(v8_is_integer(set.data[1]));
+    EXPECT_EQ(v8_to_int32(set.data[1]), 2);
+
+    EXPECT_TRUE(v8_is_integer(set.data[2]));
+    EXPECT_EQ(v8_to_int32(set.data[2]), 3);
+
+    v8_delete_value(&res);
+
+    v8_delete_value(&res);
+    v8_delete_error(&err);
+    v8_delete_script(script);
+}
+
+TEST_F(IsolateFixture, MapConversion)
+{
+    v8_error err;
+
+    v8_script* script =
+        v8_compile_script(vm, "new Map([ [1, true], [2, false] ]);", "my.js", &err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value res;
+
+    const bool ok = v8_run_script(script, &res, &err);
+
+    ASSERT_TRUE(ok);
+
+    ASSERT_TRUE(v8_is_map(res));
+
+    v8_map_value map = v8_to_map(res);
+
+    ASSERT_EQ(map.size, 2);
+
+    v8_pair_value p1 = map.data[0];
+
+    EXPECT_TRUE(v8_is_integer(p1.first));
+    EXPECT_EQ(v8_to_int32(p1.first), 1);
+
+    EXPECT_TRUE(v8_is_boolean(p1.second));
+    EXPECT_EQ(v8_to_bool(p1.second), true);
+
+    v8_pair_value p2 = map.data[1];
+
+    EXPECT_TRUE(v8_is_integer(p2.first));
+    EXPECT_EQ(v8_to_int32(p2.first), 2);
+
+    EXPECT_TRUE(v8_is_boolean(p2.second));
+    EXPECT_EQ(v8_to_bool(p2.second), false);
+
+    v8_delete_value(&res);
+
+    v8_delete_value(&res);
+    v8_delete_error(&err);
+    v8_delete_script(script);
+}

@@ -441,8 +441,8 @@ void v8_delete_value(v8_value* value)
     {
     case js_types::undefined:
         return;
-    case js_types::boolean:
-    case js_types::null:
+    case js_types::boolean: // fallthrough
+    case js_types::null:    // fallthrough
     case js_types::number:
         set_undefined(value);
         return;
@@ -469,8 +469,7 @@ void v8_delete_value(v8_value* value)
         delete[] static_cast<v8_pair_value*>(val_impl.data);
         set_undefined(value);
         return;
-    case js_types::array:
-        // like set
+    case js_types::array:  // fallthrough
     case js_types::set:
         for (int i = 0; i < val_impl.size; ++i)
         {
@@ -609,15 +608,17 @@ v8_value from_v8_value(v8::Local<v8::Context> context, v8::Local<v8::Value> valu
             }
 
             v8::Local<v8::Value> v;
-            if (!arr->Get(context, i).ToLocal(&v))
+            if (!arr->Get(context, i + 1).ToLocal(&v))
             {
                 v8_delete_value(&res);
                 assert(!"invalid conversion");
                 return v8_new_undefined();
             }
 
-            data[i].first = from_v8_value(context, k);
-            data[i].second = from_v8_value(context, v);
+            const auto index = i / 2;
+
+            data[index].first = from_v8_value(context, k);
+            data[index].second = from_v8_value(context, v);
         }
 
         return res;
