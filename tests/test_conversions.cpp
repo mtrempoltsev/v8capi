@@ -78,3 +78,40 @@ TEST_F(IsolateFixture, PrimitivesConversion)
     v8_delete_error(&err);
     v8_delete_script(script);
 }
+
+TEST_F(IsolateFixture, ArrayConversion)
+{
+    v8_error err;
+
+    v8_script* script =
+        v8_compile_script(vm, "[ 1, 2, 3 ]", "my.js", &err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value res;
+
+    const bool ok = v8_run_script(script, &res, &err);
+
+    ASSERT_TRUE(ok);
+
+    ASSERT_TRUE(v8_is_array(res));
+
+    v8_array_value arr = v8_to_array(res);
+
+    ASSERT_EQ(arr.size, 3);
+
+    EXPECT_TRUE(v8_is_integer(arr.data[0]));
+    EXPECT_EQ(v8_to_int32(arr.data[0]), 1);
+
+    EXPECT_TRUE(v8_is_integer(arr.data[1]));
+    EXPECT_EQ(v8_to_int32(arr.data[1]), 2);
+
+    EXPECT_TRUE(v8_is_integer(arr.data[2]));
+    EXPECT_EQ(v8_to_int32(arr.data[2]), 3);
+
+    v8_delete_value(&res);
+
+    v8_delete_value(&res);
+    v8_delete_error(&err);
+    v8_delete_script(script);
+}

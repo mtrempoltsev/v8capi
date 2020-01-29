@@ -462,9 +462,9 @@ void v8_delete_value(v8_value* value)
     case js_types::object:
         for (int i = 0; i < val_impl.size; ++i)
         {
-            auto pair = &static_cast<v8_pair_value*>(val_impl.data)[i];
-            v8_delete_value(&pair->first);
-            v8_delete_value(&pair->second);
+            auto pair = static_cast<v8_pair_value*>(val_impl.data)[i];
+            v8_delete_value(&pair.first);
+            v8_delete_value(&pair.second);
         }
         delete[] static_cast<v8_pair_value*>(val_impl.data);
         set_undefined(value);
