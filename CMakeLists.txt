@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.8)
 
 project (v8capi)
 
@@ -61,6 +61,7 @@ include_directories (thirdparty/googletest/googletest/include)
 
 enable_testing ()
 
+configure_file (./tests/data/check_conversions.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/good_script.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/infinite_loop.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file (./tests/data/primitives.js ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)

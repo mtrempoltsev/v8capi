@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 #include "utils.h"
 
@@ -19,7 +19,9 @@ TEST_F(IsolateFixture, PrimitivesConversion)
 
     v8_value res;
 
-    const bool ok = v8_run_script(script, &res, &err);
+    bool ok = v8_run_script(script, &res, &err);
+
+    v8_delete_error(&err);
 
     ASSERT_TRUE(ok);
 
@@ -72,8 +74,34 @@ TEST_F(IsolateFixture, PrimitivesConversion)
     EXPECT_TRUE(v8_is_string(obj.data[8].second));
     EXPECT_STREQ(v8_to_string(&obj.data[8].second).data, "long long long long long long long long long long long string");
 
-    v8_delete_value(&res);
+    v8_delete_script(script);
 
+    script =
+        v8_compile_script(vm, read_file("check_conversions.js").c_str(), "my.js", &err);
+
+    v8_delete_error(&err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value skip;
+
+    ok = v8_run_script(script, &skip, &err);
+
+    v8_delete_value(&skip);
+    v8_delete_error(&err);
+
+    ASSERT_TRUE(ok);
+
+    v8_callable* check = v8_get_function(script, "check_obj");
+
+    ASSERT_NE(check, nullptr);
+
+    ok = v8_call_function(check, 1, &res, &skip, &err);
+
+    EXPECT_TRUE(ok) << err.message;
+
+    v8_delete_function(check);
+    v8_delete_value(&skip);
     v8_delete_value(&res);
     v8_delete_error(&err);
     v8_delete_script(script);
@@ -90,7 +118,9 @@ TEST_F(IsolateFixture, ArrayConversion)
 
     v8_value res;
 
-    const bool ok = v8_run_script(script, &res, &err);
+    bool ok = v8_run_script(script, &res, &err);
+
+    v8_delete_error(&err);
 
     ASSERT_TRUE(ok);
 
@@ -109,8 +139,32 @@ TEST_F(IsolateFixture, ArrayConversion)
     EXPECT_TRUE(v8_is_integer(arr.data[2]));
     EXPECT_EQ(v8_to_int32(arr.data[2]), 3);
 
-    v8_delete_value(&res);
+    v8_delete_script(script);
 
+    script =
+        v8_compile_script(vm, read_file("check_conversions.js").c_str(), "my.js", &err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value skip;
+
+    ok = v8_run_script(script, &skip, &err);
+
+    v8_delete_value(&skip);
+    v8_delete_error(&err);
+
+    ASSERT_TRUE(ok);
+
+    v8_callable* check = v8_get_function(script, "check_arr");
+
+    ASSERT_NE(check, nullptr);
+
+    ok = v8_call_function(check, 1, &res, &skip, &err);
+
+    EXPECT_TRUE(ok) << err.message;
+
+    v8_delete_function(check);
+    v8_delete_value(&skip);
     v8_delete_value(&res);
     v8_delete_error(&err);
     v8_delete_script(script);
@@ -127,7 +181,9 @@ TEST_F(IsolateFixture, SetConversion)
 
     v8_value res;
 
-    const bool ok = v8_run_script(script, &res, &err);
+    bool ok = v8_run_script(script, &res, &err);
+
+    v8_delete_error(&err);
 
     ASSERT_TRUE(ok);
 
@@ -146,8 +202,34 @@ TEST_F(IsolateFixture, SetConversion)
     EXPECT_TRUE(v8_is_integer(set.data[2]));
     EXPECT_EQ(v8_to_int32(set.data[2]), 3);
 
-    v8_delete_value(&res);
+    v8_delete_script(script);
 
+    script =
+        v8_compile_script(vm, read_file("check_conversions.js").c_str(), "my.js", &err);
+
+    v8_delete_error(&err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value skip;
+
+    ok = v8_run_script(script, &skip, &err);
+
+    v8_delete_value(&skip);
+    v8_delete_error(&err);
+
+    ASSERT_TRUE(ok);
+
+    v8_callable* check = v8_get_function(script, "check_set");
+
+    ASSERT_NE(check, nullptr);
+
+    ok = v8_call_function(check, 1, &res, &skip, &err);
+
+    EXPECT_TRUE(ok) << err.message;
+
+    v8_delete_function(check);
+    v8_delete_value(&skip);
     v8_delete_value(&res);
     v8_delete_error(&err);
     v8_delete_script(script);
@@ -164,7 +246,9 @@ TEST_F(IsolateFixture, MapConversion)
 
     v8_value res;
 
-    const bool ok = v8_run_script(script, &res, &err);
+    bool ok = v8_run_script(script, &res, &err);
+
+    v8_delete_error(&err);
 
     ASSERT_TRUE(ok);
 
@@ -190,8 +274,34 @@ TEST_F(IsolateFixture, MapConversion)
     EXPECT_TRUE(v8_is_boolean(p2.second));
     EXPECT_EQ(v8_to_bool(p2.second), false);
 
-    v8_delete_value(&res);
+    v8_delete_script(script);
 
+    script =
+        v8_compile_script(vm, read_file("check_conversions.js").c_str(), "my.js", &err);
+
+    v8_delete_error(&err);
+
+    ASSERT_NE(script, nullptr);
+
+    v8_value skip;
+
+    ok = v8_run_script(script, &skip, &err);
+
+    v8_delete_value(&skip);
+    v8_delete_error(&err);
+
+    ASSERT_TRUE(ok);
+
+    v8_callable* check = v8_get_function(script, "check_map");
+
+    ASSERT_NE(check, nullptr);
+
+    ok = v8_call_function(check, 1, &res, &skip, &err);
+
+    EXPECT_TRUE(ok) << err.message;
+
+    v8_delete_function(check);
+    v8_delete_value(&skip);
     v8_delete_value(&res);
     v8_delete_error(&err);
     v8_delete_script(script);

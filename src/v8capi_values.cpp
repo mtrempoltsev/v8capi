@@ -1,4 +1,4 @@
-﻿#include <cassert>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <limits>
@@ -710,7 +710,8 @@ v8::Local<v8::Value> to_v8_value(v8::Local<v8::Context> context, v8_value value)
     {
         const auto str = v8_to_string(&value);
         v8::Local<v8::String> val;
-        if (!v8::String::NewFromUtf8(isolate, str.data, v8::NewStringType::kNormal, str.size).ToLocal(&val))
+        if (!v8::String::NewFromUtf8(
+            isolate, str.data, v8::NewStringType::kNormal, str.size).ToLocal(&val))
         {
             assert(!"Invalid string conversion");
             return handle_scope.Escape(v8::Undefined(isolate));
@@ -724,14 +725,78 @@ v8::Local<v8::Value> to_v8_value(v8::Local<v8::Context> context, v8_value value)
         assert(!"not implemented");
         break;
     case js_types::object:
-        assert(!"not implemented");
-        break;
+    {
+        const auto obj = v8_to_object(value);
+        v8::Local<v8::Object> val = v8::Object::New(isolate);
+        for (int i = 0; i < obj.size; ++i)
+        {
+            const auto str = v8_to_string(&obj.data[i].first);
+
+            v8::Local<v8::String> name;
+            if (!v8::String::NewFromUtf8(
+                isolate, str.data, v8::NewStringType::kNormal, str.size).ToLocal(&name))
+            {
+                assert(!"Invalid string conversion");
+                return handle_scope.Escape(v8::Undefined(isolate));
+            }
+
+            if (!val->CreateDataProperty(context,
+                name,
+                to_v8_value(context, obj.data[i].second)).ToChecked())
+            {
+                assert(!"Failed to create object property");
+                return handle_scope.Escape(v8::Undefined(isolate));
+            }
+        }
+        return handle_scope.Escape(val);
+    }
     case js_types::array:
-        break;
+    {
+        const auto arr = v8_to_array(value);
+        v8::Local<v8::Array> val = v8::Array::New(isolate, arr.size);
+        for (int i = 0; i < arr.size; ++i)
+        {
+            if (!val->Set(context, i, to_v8_value(context, arr.data[i])).ToChecked())
+            {
+                assert(!"Failed to add array element");
+                return handle_scope.Escape(v8::Undefined(isolate));
+            }
+        }
+        return handle_scope.Escape(val);
+    }
     case js_types::set:
-        break;
+    {
+        const auto set = v8_to_set(value);
+        v8::Local<v8::Set> val = v8::Set::New(isolate);
+        for (int i = 0; i < set.size; ++i)
+        {
+            v8::MaybeLocal<v8::Set> tmp =
+                val->Add(context, to_v8_value(context, set.data[i]));
+            if (!tmp.ToLocal(&val))
+            {
+                assert(!"Failed to insert into set");
+                return handle_scope.Escape(v8::Undefined(isolate));
+            }
+        }
+        return handle_scope.Escape(val);
+    }
     case js_types::map:
-        break;
+    {
+        const auto map = v8_to_map(value);
+        v8::Local<v8::Map> val = v8::Map::New(isolate);
+        for (int i = 0; i < map.size; ++i)
+        {
+            v8::MaybeLocal<v8::Map> tmp = val->Set(context,
+                to_v8_value(context, map.data[i].first),
+                to_v8_value(context, map.data[i].second));
+            if (!tmp.ToLocal(&val))
+            {
+                assert(!"Failed to insert into map");
+                return handle_scope.Escape(v8::Undefined(isolate));
+            }
+        }
+        return handle_scope.Escape(val);
+    }
     case js_types::function:
         assert(!"not implemented");
         break;
