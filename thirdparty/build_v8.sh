@@ -21,6 +21,11 @@ cd v8
 git checkout 8.1.248 || exit 1
 $ROOT_DIR/thirdparty/depot_tools/gclient sync || exit 1
 
+if test $(uname) = Linux ;
+then
+    ./build/install-build-deps.sh
+fi
+
 tools/dev/v8gen.py x64.release.sample || exit 1
 ninja -C out.gn/x64.release.sample v8_monolith || exit 1
 
