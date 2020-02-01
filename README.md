@@ -24,7 +24,8 @@ From root of V8 C API repository:
 - mkdir build
 - cd build
 - cmake .. -DCMAKE_BUILD_TYPE=Release
-  or if you want to build V8 library (it will take about 20-60 minutes)
+  or if you want to build V8 library (it will take about 20-60 minutes,
+  also on Linux you may need a root password. See https://v8.dev/docs/build)
   cmake .. -DCMAKE_BUILD_TYPE=Release -DV8CAPI_BUILD_V8=ON
 - make
 ```
