@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <stdint.h>
 
@@ -14,8 +14,13 @@ extern "C" {
 struct v8_instance;
 
 // Creates an instance of V8. Must be called once
-// and before all other calls
+// and before all other calls. thread_pool_size
+// is the number of worker threads to allocate for
+// background jobs. If a value of zero is passed,
+// a suitable default based on the current number of
+// processors online will be chosen
 struct v8_instance* v8_new_instance(
+    unsigned thread_pool_size,
     const char* exec_path);
 
 void v8_delete_instance(

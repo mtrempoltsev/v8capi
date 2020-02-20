@@ -1,4 +1,4 @@
-﻿#include <cassert>
+#include <cassert>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -16,9 +16,8 @@ struct v8_instance
     std::unique_ptr<v8::Platform> platform_;
 };
 
-static const int ONE_THREAD = 1;
-
 v8_instance* v8_new_instance(
+    unsigned thread_pool_size,
     const char* exec_path)
 {
     v8::V8::InitializeICUDefaultLocation(exec_path);
@@ -26,7 +25,8 @@ v8_instance* v8_new_instance(
 
     auto instance = std::make_unique<v8_instance>();
 
-    instance->platform_ = v8::platform::NewDefaultPlatform(ONE_THREAD);
+    instance->platform_ = v8::platform::NewDefaultPlatform(
+        static_cast<int>(thread_pool_size));
 
     v8::V8::InitializePlatform(instance->platform_.get());
     v8::V8::Initialize();
